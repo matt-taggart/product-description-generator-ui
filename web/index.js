@@ -36,6 +36,47 @@ app.use("/api/*", shopify.validateAuthenticatedSession());
 
 app.use(express.json());
 
+app.get("/api/products", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+
+  const data = await client.query({
+    data: {
+      query: `
+          {
+            products(first: 10) {
+              edges {
+                node {
+                  id
+                  title
+                  images(first: 1) {
+                    edges {
+                      node {
+                        id
+                        url
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+    },
+  });
+
+  const products = data.body.data.products.edges.map((edge) => ({
+    id: edge.node.id,
+    title: edge.node.title,
+    image: {
+      id: edge.node.images?.edges[0]?.node?.id,
+      url: edge.node.images?.edges[0]?.node?.url,
+    },
+  }));
+  res.send(products);
+});
+
 app.get("/api/products/count", async (_req, res) => {
   const countData = await shopify.api.rest.Product.count({
     session: res.locals.shopify.session,

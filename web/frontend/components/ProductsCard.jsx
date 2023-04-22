@@ -1,12 +1,18 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import {
   Text,
   Page,
+  HorizontalStack,
   VerticalStack,
   Button,
+  Box,
   TextField,
   Pagination,
+  LegacyCard,
+  Divider,
+  Thumbnail,
 } from "@shopify/polaris";
+import { NoteMinor } from "@shopify/polaris-icons";
 import { useAppQuery } from "../hooks";
 
 export function ProductsCard() {
@@ -27,14 +33,12 @@ export function ProductsCard() {
     },
   });
 
-  // const { data, isLoading, isRefetching } = useAppQuery({
-  //   url: `/api/products`,
-  //   // reactQueryOptions: {
-  //   //   refetchOnReconnect: false,
-  //   // },
-  // });
-  // console.log("%cdata", "color:cyan; ", data);
+  const { data: products = [] } = useAppQuery({
+    url: `/api/products`,
+    reactQueryOptions: {},
+  });
 
+  console.log("%cproducts", "color:cyan; ", products);
   const handleChange = (newValue) => setValue(newValue);
 
   return (
@@ -50,6 +54,37 @@ export function ProductsCard() {
           autoComplete="off"
           placeholder="Search for products"
         />
+        {data?.count ? (
+          <Text>Displaying 10 out of {data?.count} products</Text>
+        ) : null}
+
+        <LegacyCard>
+          <div style={{ display: "flex", flexDirection: "column" }}>
+            {products.map((product) => (
+              <React.Fragment key={product.id}>
+                <HorizontalStack blockAlign="center" gap="20">
+                  <HorizontalStack blockAlign="center" gap="6">
+                    <Box padding="3">
+                      <Thumbnail
+                        size="large"
+                        source={product?.image?.url || NoteMinor}
+                        style={{
+                          margin: "1rem 0.75rem",
+                        }}
+                      />
+                    </Box>
+                    <VerticalStack>
+                      <Text fontWeight="bold">Product Name</Text>
+                      <Text>{product.title}</Text>
+                    </VerticalStack>
+                  </HorizontalStack>
+                  <Button size="slim">Generate description</Button>
+                </HorizontalStack>
+                <Divider />
+              </React.Fragment>
+            ))}
+          </div>
+        </LegacyCard>
         <Pagination
           label="Prev | Next"
           hasPrevious
