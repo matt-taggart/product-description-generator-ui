@@ -5,12 +5,18 @@ import {
   HorizontalStack,
   VerticalStack,
   Button,
+  Checkbox,
   Box,
   TextField,
   Pagination,
   LegacyCard,
   Divider,
   Thumbnail,
+  Modal,
+  SkeletonDisplayText,
+  SkeletonBodyText,
+  SkeletonPage,
+  SkeletonThumbnail,
 } from "@shopify/polaris";
 import { NoteMinor } from "@shopify/polaris-icons";
 import { useAppQuery } from "../hooks";
@@ -18,6 +24,8 @@ import { useAppQuery } from "../hooks";
 export function ProductsCard() {
   const [isLoading, setIsLoading] = useState(true);
   const [value, setValue] = useState("");
+  const [checked, setChecked] = useState(false);
+  const [active, setActive] = useState(false);
 
   const {
     data,
@@ -33,13 +41,16 @@ export function ProductsCard() {
     },
   });
 
-  const { data: products = [] } = useAppQuery({
+  const { data: products = [], isLoading: isLoadingProducts } = useAppQuery({
     url: `/api/products`,
     reactQueryOptions: {},
   });
 
-  console.log("%cproducts", "color:cyan; ", products);
   const handleChange = (newValue) => setValue(newValue);
+  const handleCheck = (newChecked) => setChecked(newChecked);
+  const toggleModal = () => setActive(!active);
+
+  const isPageLoading = isLoadingCount || isLoadingProducts;
 
   return (
     <Page>
@@ -54,35 +65,71 @@ export function ProductsCard() {
           autoComplete="off"
           placeholder="Search for products"
         />
-        {data?.count ? (
+        {!isPageLoading && data?.count ? (
           <Text>Displaying 10 out of {data?.count} products</Text>
-        ) : null}
-
+        ) : (
+          <SkeletonDisplayText size="small" />
+        )}
+        <HorizontalStack blockAlign="center" gap="4">
+          <Checkbox
+            label="Generate all descriptions"
+            checked={checked}
+            onChange={handleCheck}
+          />
+          <Button size="slim" disabled={!checked} onClick={toggleModal}>
+            Submit
+          </Button>
+        </HorizontalStack>
         <LegacyCard>
           <div style={{ display: "flex", flexDirection: "column" }}>
-            {products.map((product) => (
-              <React.Fragment key={product.id}>
-                <HorizontalStack blockAlign="center" gap="20">
-                  <HorizontalStack blockAlign="center" gap="6">
-                    <Box padding="3">
-                      <Thumbnail
-                        size="large"
-                        source={product?.image?.url || NoteMinor}
-                        style={{
-                          margin: "1rem 0.75rem",
-                        }}
-                      />
-                    </Box>
-                    <VerticalStack>
-                      <Text fontWeight="bold">Product Name</Text>
-                      <Text>{product.title}</Text>
-                    </VerticalStack>
-                  </HorizontalStack>
-                  <Button size="slim">Generate description</Button>
-                </HorizontalStack>
-                <Divider />
-              </React.Fragment>
-            ))}
+            {isPageLoading ? (
+              <>
+                {Array(10)
+                  .fill(null)
+                  .map((_, index) => (
+                    <React.Fragment key={index}>
+                      <HorizontalStack blockAlign="center" gap="20">
+                        <HorizontalStack blockAlign="center" gap="6">
+                          <Box padding="3">
+                            <SkeletonThumbnail size="large" />
+                          </Box>
+                          <div style={{ width: "98px" }}>
+                            <SkeletonBodyText lines={2} />
+                          </div>
+                        </HorizontalStack>
+                        <Button size="slim">Generate description</Button>
+                      </HorizontalStack>
+                      <Divider />
+                    </React.Fragment>
+                  ))}
+              </>
+            ) : (
+              <>
+                {products.map((product) => (
+                  <React.Fragment key={product.id}>
+                    <HorizontalStack blockAlign="center" gap="20">
+                      <HorizontalStack blockAlign="center" gap="6">
+                        <Box padding="3">
+                          <Thumbnail
+                            size="large"
+                            source={product?.image?.url || NoteMinor}
+                            style={{
+                              margin: "1rem 0.75rem",
+                            }}
+                          />
+                        </Box>
+                        <VerticalStack>
+                          <Text fontWeight="bold">Product Name</Text>
+                          <Text>{product.title}</Text>
+                        </VerticalStack>
+                      </HorizontalStack>
+                      <Button size="slim">Generate description</Button>
+                    </HorizontalStack>
+                    <Divider />
+                  </React.Fragment>
+                ))}
+              </>
+            )}
           </div>
         </LegacyCard>
         <Pagination
@@ -97,6 +144,28 @@ export function ProductsCard() {
           }}
         />
       </VerticalStack>
+      <Modal
+        open={active}
+        onClose={toggleModal}
+        title="Confirm Action"
+        primaryAction={{
+          content: "Generate",
+          onAction: toggleModal,
+        }}
+        secondaryActions={[
+          {
+            content: "Cancel",
+            onAction: toggleModal,
+          },
+        ]}
+      >
+        <Modal.Section>
+          <Text>
+            Are you sure you want to generate descriptions for all products on
+            this page?
+          </Text>
+        </Modal.Section>
+      </Modal>
     </Page>
   );
 }
