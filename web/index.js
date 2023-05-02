@@ -83,11 +83,13 @@ app.get("/api/products", async (_req, res) => {
     session: res.locals.shopify.session,
   });
 
+  const currentPage = _req.query.start;
+
   const data = await client.query({
     data: {
       query: `
           {
-            products(first: 10) {
+            products(first: 15) {
               edges {
                 node {
                   id

@@ -26,6 +26,7 @@ export function ProductsCard() {
   const [searchedProducts, setSearchedProducts] = useState([]);
   const [checked, setChecked] = useState(false);
   const [active, setActive] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
     url: "/api/products/count",
@@ -33,7 +34,7 @@ export function ProductsCard() {
   });
 
   const { data: products = [], isLoading: isLoadingProducts } = useAppQuery({
-    url: `/api/products`,
+    url: `/api/products?start=${currentPage}`,
     reactQueryOptions: {},
   });
 
