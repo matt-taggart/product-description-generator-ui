@@ -7,6 +7,7 @@ import {
   Button,
   Checkbox,
   Box,
+  Tooltip,
   TextField,
   Pagination,
   LegacyCard,
@@ -222,7 +223,21 @@ export function ProductsCard() {
                               <Text>{product.title}</Text>
                             </VerticalStack>
                           </HorizontalStack>
-                          <Button size="slim">Generate description</Button>
+                          {product?.image?.url ? (
+                            <Button size="slim">Generate description</Button>
+                          ) : (
+                            <Tooltip
+                              dismissOnMouseOut
+                              content="You must add an image to generate a description"
+                            >
+                              <Button
+                                size="slim"
+                                disabled={!product?.image?.url}
+                              >
+                                Generate description
+                              </Button>
+                            </Tooltip>
+                          )}
                         </HorizontalStack>
                         <Divider />
                       </React.Fragment>
@@ -252,7 +267,21 @@ export function ProductsCard() {
                               <Text>{product.title}</Text>
                             </VerticalStack>
                           </HorizontalStack>
-                          <Button size="slim">Generate description</Button>
+                          {product?.image?.url ? (
+                            <Button size="slim">Generate description</Button>
+                          ) : (
+                            <Tooltip
+                              dismissOnMouseOut
+                              content="You must add an image to generate a description"
+                            >
+                              <Button
+                                size="slim"
+                                disabled={!product?.image?.url}
+                              >
+                                Generate description
+                              </Button>
+                            </Tooltip>
+                          )}
                         </HorizontalStack>
                         <Divider />
                       </React.Fragment>
