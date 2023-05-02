@@ -36,6 +36,48 @@ app.use("/api/*", shopify.validateAuthenticatedSession());
 
 app.use(express.json());
 
+app.post("/api/products/search", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+
+  const searchText = _req.body.searchText;
+  const data = await client.query({
+    data: {
+      query: `
+          {
+            products(first: 15, query: "title:${searchText}*") {
+              edges {
+                node {
+                  id
+                  title
+                  images(first: 1) {
+                    edges {
+                      node {
+                        id
+                        url
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        `,
+    },
+  });
+
+  const products = data.body.data.products.edges.map((edge) => ({
+    id: edge.node.id,
+    title: edge.node.title,
+    image: {
+      id: edge.node.images?.edges[0]?.node?.id,
+      url: edge.node.images?.edges[0]?.node?.url,
+    },
+  }));
+  res.send(products);
+});
+
 app.get("/api/products", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
