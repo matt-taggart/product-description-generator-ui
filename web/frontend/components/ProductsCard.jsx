@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Text,
   Page,
@@ -22,23 +22,71 @@ import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 
 export function ProductsCard() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
+  const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [value, setValue] = useState("");
+  const [products, setProducts] = useState([]);
   const [searchedProducts, setSearchedProducts] = useState([]);
   const [checked, setChecked] = useState(false);
   const [active, setActive] = useState(false);
-  const [currentPage, setCurrentPage] = useState(0);
+  const [pageInfo, setPageInfo] = useState({});
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
     url: "/api/products/count",
     reactQueryOptions: {},
   });
 
-  const { data: products = [], isLoading: isLoadingProducts } = useAppQuery({
-    url: `/api/products?start=${currentPage}`,
-    reactQueryOptions: {},
-  });
+  const startCursor = pageInfo?.startCursor;
+  const endCursor = pageInfo?.endCursor;
+  const hasNextPage = pageInfo?.hasNextPage;
+  const hasPreviousPage = pageInfo?.hasPreviousPage;
 
   const authenticatedFetch = useAuthenticatedFetch();
+
+  const fetchProducts = useCallback(async () => {
+    setIsLoadingProducts(true);
+    const response = await authenticatedFetch(`/api/products`, {
+      method: "GET",
+    });
+    const productResponse = await response.json();
+
+    setProducts(productResponse?.products);
+    setPageInfo(productResponse?.pageInfo);
+    setIsLoadingProducts(false);
+  }, []);
+
+  useEffect(() => {
+    fetchProducts();
+  }, [fetchProducts]);
+
+  const getNextPage = async () => {
+    setIsLoadingProducts(true);
+    const response = await authenticatedFetch(
+      `/api/products?after=${endCursor}`,
+      {
+        method: "GET",
+      }
+    );
+    const productResponse = await response.json();
+
+    setProducts(productResponse?.products);
+    setPageInfo(productResponse?.pageInfo);
+    setIsLoadingProducts(false);
+  };
+
+  const getPreviousPage = async () => {
+    setIsLoadingProducts(true);
+    const response = await authenticatedFetch(
+      `/api/products?before=${startCursor}`,
+      {
+        method: "GET",
+      }
+    );
+    const productResponse = await response.json();
+
+    setProducts(productResponse?.products);
+    setPageInfo(productResponse?.pageInfo);
+    setIsLoadingProducts(false);
+  };
 
   const onSubmit = async () => {
     setIsLoadingProductSearch(true);
@@ -62,7 +110,7 @@ export function ProductsCard() {
   const toggleModal = () => setActive(!active);
 
   const isPageLoading =
-    isLoadingCount || isLoadingProducts | isLoadingProductSearch;
+    isLoadingCount || isLoadingProducts || isLoadingProductSearch;
 
   return (
     <Page>
@@ -217,14 +265,10 @@ export function ProductsCard() {
         </LegacyCard>
         <Pagination
           label="Prev | Next"
-          hasPrevious
-          onPrevious={() => {
-            console.log("Previous");
-          }}
-          hasNext
-          onNext={() => {
-            console.log("Next");
-          }}
+          hasPrevious={hasPreviousPage}
+          onPrevious={getPreviousPage}
+          hasNext={hasNextPage}
+          onNext={getNextPage}
         />
       </VerticalStack>
       <Modal

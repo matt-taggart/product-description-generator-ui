@@ -82,34 +82,108 @@ app.get("/api/products", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
+  const after = _req.query?.after;
+  const before = _req.query?.before;
 
-  const currentPage = _req.query.start;
+  let query = "";
 
-  const data = await client.query({
-    data: {
-      query: `
-          {
-            products(first: 15) {
+  const baseQuery = `
+    {
+      products(first: 15) {
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          startCursor
+          endCursor
+        }
+        edges {
+          node {
+            id
+            title
+            images(first: 1) {
               edges {
                 node {
                   id
-                  title
-                  images(first: 1) {
-                    edges {
-                      node {
-                        id
-                        url
-                      }
-                    }
-                  }
+                  url
                 }
               }
             }
           }
-        `,
+        }
+      }
+    }
+  `;
+
+  const nextQuery = `
+    {
+      products(first: 15, after: "${after}") {
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          startCursor
+          endCursor
+        }
+        edges {
+          node {
+            id
+            title
+            images(first: 1) {
+              edges {
+                node {
+                  id
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  const previousQuery = `
+    {
+      products(last: 15, before: "${before}") {
+        pageInfo {
+          hasPreviousPage
+          hasNextPage
+          startCursor
+          endCursor
+        }
+        edges {
+          node {
+            id
+            title
+            images(first: 1) {
+              edges {
+                node {
+                  id
+                  url
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  `;
+
+  if (!after && !before) {
+    query = baseQuery;
+  } else if (after) {
+    query = nextQuery;
+  } else {
+    query = previousQuery;
+  }
+
+  const data = await client.query({
+    data: {
+      query,
     },
   });
 
+  const pageInfo = data.body.data.products.pageInfo;
+  console.log("%cpageInfo", "color:cyan; ", pageInfo);
   const products = data.body.data.products.edges.map((edge) => ({
     id: edge.node.id,
     title: edge.node.title,
@@ -118,7 +192,10 @@ app.get("/api/products", async (_req, res) => {
       url: edge.node.images?.edges[0]?.node?.url,
     },
   }));
-  res.send(products);
+  res.send({
+    pageInfo,
+    products,
+  });
 });
 
 app.get("/api/products/count", async (_req, res) => {
