@@ -24,6 +24,7 @@ import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 export function ProductsCard() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isLoadingDescription, setIsLoadingDescription] = useState(false);
   const [value, setValue] = useState("");
   const [products, setProducts] = useState([]);
   const [searchedProducts, setSearchedProducts] = useState([]);
@@ -106,6 +107,24 @@ export function ProductsCard() {
     setIsLoadingProductSearch(false);
   };
 
+  const generateDescription = async (product) => {
+    setIsLoadingDescription(true);
+    const response = await authenticatedFetch("/api/products/generate", {
+      method: "POST",
+      body: JSON.stringify({
+        id: product.id,
+        productName: product.title,
+        photoUrl: product.image.url,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const message = await response.json();
+
+    setIsLoadingDescription(false);
+    console.log("%cmessage", "color:cyan; ", message);
+  };
   const handleChange = (newValue) => setValue(newValue);
   const handleCheck = (newChecked) => setChecked(newChecked);
   const toggleModal = () => setActive(!active);
@@ -224,7 +243,13 @@ export function ProductsCard() {
                             </VerticalStack>
                           </HorizontalStack>
                           {product?.image?.url ? (
-                            <Button size="slim">Generate description</Button>
+                            <Button
+                              size="slim"
+                              disabled={isLoadingDescription}
+                              onClick={() => generateDescription(product)}
+                            >
+                              Generate description
+                            </Button>
                           ) : (
                             <Tooltip
                               dismissOnMouseOut
@@ -268,7 +293,12 @@ export function ProductsCard() {
                             </VerticalStack>
                           </HorizontalStack>
                           {product?.image?.url ? (
-                            <Button size="slim">Generate description</Button>
+                            <Button
+                              size="slim"
+                              onClick={() => generateDescription(product)}
+                            >
+                              Generate description
+                            </Button>
                           ) : (
                             <Tooltip
                               dismissOnMouseOut

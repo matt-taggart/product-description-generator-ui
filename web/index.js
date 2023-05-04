@@ -3,6 +3,8 @@ import { join } from "path";
 import { readFileSync } from "fs";
 import express from "express";
 import serveStatic from "serve-static";
+import Replicate from "replicate";
+import { Configuration, OpenAIApi } from "openai";
 
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
@@ -217,6 +219,74 @@ app.get("/api/products/create", async (_req, res) => {
     error = e.message;
   }
   res.status(status).send({ success: status === 200, error });
+});
+
+// const baseQuery = `
+// {
+//   mutation {
+//     productUpdate(input: {
+//       id: "gid://shopify/Product/1234567890",
+//       descriptionHtml: "This is the updated product description."
+//     }) {
+//       product {
+//         id
+//         descriptionHtml
+//       }
+//       userErrors {
+//         field
+//         message
+//       }
+//     }
+//   }
+// }
+// `;
+
+const replicate = new Replicate({
+  // get your token from https://replicate.com/account
+  auth: process.env.VITE_REPLICATE_API_TOKEN,
+});
+const configuration = new Configuration({
+  apiKey: process.env.VITE_OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+app.post("/api/products/generate", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+  const shop = client.session.shop;
+  const { id, photoUrl, productName } = _req.body;
+
+  try {
+    const output = await replicate.run(
+      "chen/minigpt-4_vicuna-13b:c1f0352f9da298ac874159e350d6d78139e3805b7e55f5df7c5b79a66ae19528",
+      {
+        input: {
+          image: photoUrl,
+          message: `Please give a sales pitch for this photo. The product name is ${productName}.`,
+        },
+      }
+    );
+    console.log("output", output);
+
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: `Sales Pitch: ${output} \n\n Question: Can you please improve the wording of the sales pitch for the product name above?`,
+        },
+      ],
+      temperature: 1,
+    });
+
+    res.send({ message: completion.data.choices[0].message.content });
+    return;
+  } catch (error) {
+    console.log("%cerror", "color:cyan; ", error.message);
+  }
+
+  res.send({ message: "success" });
 });
 
 app.use(shopify.cspHeaders());

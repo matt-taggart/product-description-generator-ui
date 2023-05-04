@@ -13,7 +13,9 @@
   },
   "dependencies": {
     "@shopify/app": "3.45.1",
-    "@shopify/cli": "3.45.1"
+    "@shopify/cli": "3.45.1",
+    "openai": "^3.2.1",
+    "replicate": "^0.11.1"
   },
   "author": "mtaggart"
 }
