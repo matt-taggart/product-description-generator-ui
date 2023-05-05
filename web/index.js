@@ -254,7 +254,7 @@ app.post("/api/products/generate", async (_req, res) => {
     session: res.locals.shopify.session,
   });
   const shop = client.session.shop;
-  const { id, photoUrl, productName } = _req.body;
+  const { photoUrl, productName, shouldDescribe } = _req.body;
 
   try {
     const output = await replicate.run(
@@ -262,30 +262,39 @@ app.post("/api/products/generate", async (_req, res) => {
       {
         input: {
           image: photoUrl,
-          message: `Please give a sales pitch for this photo. The product name is ${productName}.`,
+          message: `Please give a sales pitch for this photo. The product name is ${productName} and it should focus on ${shouldDescribe} in the photo.`,
         },
       }
     );
-    console.log("output", output);
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "user",
-          content: `Sales Pitch: ${output} \n\n Question: Can you please improve the wording of the sales pitch for the product name above?`,
+          content: `Context: ${output} \n\n Question: Can you please improve the wording of the text provided in the context?`,
         },
       ],
       temperature: 1,
     });
 
     res.send({ message: completion.data.choices[0].message.content });
+    // return;
+    // const delay = (timeout) =>
+    //   new Promise((resolve) => {
+    //     setTimeout(() => {
+    //       resolve();
+    //     }, timeout);
+    //   });
+
+    // await delay(20000);
+    // res.send({ message: "Sample message" });
     return;
   } catch (error) {
-    console.log("%cerror", "color:cyan; ", error.message);
+    console.log("%cerror", "color:cyan; ", error);
+    res.status(400).send({ message: "Something went wrong" });
+    return;
   }
-
-  res.send({ message: "success" });
 });
 
 app.use(shopify.cspHeaders());
