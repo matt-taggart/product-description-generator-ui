@@ -6,7 +6,6 @@ import {
   VerticalStack,
   Button,
   TextField,
-  Pagination,
   LegacyCard,
   SkeletonDisplayText,
 } from "@shopify/polaris";
@@ -14,6 +13,7 @@ import {
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 import { Product } from "./Product";
 import { ProductSkeleton } from "./ProductSkeleton";
+import { ProductPagination } from "./ProductPagination";
 import { GenerateDescriptionsForAllToolbar } from "./GenerateDescriptionsForAllToolbar";
 
 export function Home() {
@@ -29,11 +29,6 @@ export function Home() {
     reactQueryOptions: {},
   });
 
-  const startCursor = pageInfo?.startCursor;
-  const endCursor = pageInfo?.endCursor;
-  const hasNextPage = pageInfo?.hasNextPage;
-  const hasPreviousPage = pageInfo?.hasPreviousPage;
-
   const authenticatedFetch = useAuthenticatedFetch();
 
   const fetchProducts = useCallback(async () => {
@@ -43,44 +38,12 @@ export function Home() {
     });
     const productResponse = await response.json();
 
-    setProducts(productResponse?.products);
-    setPageInfo(productResponse?.pageInfo);
-    setIsLoadingProducts(false);
+    setProductState(productResponse);
   }, []);
 
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
-
-  const getNextPage = async () => {
-    setIsLoadingProducts(true);
-    const response = await authenticatedFetch(
-      `/api/products?after=${endCursor}`,
-      {
-        method: "GET",
-      }
-    );
-    const productResponse = await response.json();
-
-    setProducts(productResponse?.products);
-    setPageInfo(productResponse?.pageInfo);
-    setIsLoadingProducts(false);
-  };
-
-  const getPreviousPage = async () => {
-    setIsLoadingProducts(true);
-    const response = await authenticatedFetch(
-      `/api/products?before=${startCursor}`,
-      {
-        method: "GET",
-      }
-    );
-    const productResponse = await response.json();
-
-    setProducts(productResponse?.products);
-    setPageInfo(productResponse?.pageInfo);
-    setIsLoadingProducts(false);
-  };
 
   const onSubmit = async () => {
     setIsLoadingProductSearch(true);
@@ -100,6 +63,12 @@ export function Home() {
   };
 
   const handleChange = (newValue) => setValue(newValue);
+
+  const setProductState = (productResponse) => {
+    setProducts(productResponse?.products);
+    setPageInfo(productResponse?.pageInfo);
+    setIsLoadingProducts(false);
+  };
 
   const isPageLoading =
     isLoadingCount || isLoadingProducts || isLoadingProductSearch;
@@ -193,12 +162,10 @@ export function Home() {
             })()}
           </div>
         </LegacyCard>
-        <Pagination
-          label="Prev | Next"
-          hasPrevious={hasPreviousPage}
-          onPrevious={getPreviousPage}
-          hasNext={hasNextPage}
-          onNext={getNextPage}
+        <ProductPagination
+          pageInfo={pageInfo}
+          setIsLoadingProducts={setIsLoadingProducts}
+          setProductState={setProductState}
         />
       </VerticalStack>
     </Page>
