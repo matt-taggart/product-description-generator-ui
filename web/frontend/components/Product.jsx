@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useState } from "react";
 import {
   Text,
   HorizontalStack,
@@ -8,12 +8,14 @@ import {
   Tooltip,
   Divider,
   Thumbnail,
+  TextField,
 } from "@shopify/polaris";
 import { NoteMinor } from "@shopify/polaris-icons";
-import { useAppQuery, useAuthenticatedFetch } from "../hooks";
+import { useAuthenticatedFetch } from "../hooks";
 
 export const Product = (product) => {
   const [isLoading, setLoading] = useState(false);
+  const [value, setValue] = useState("");
   const authenticatedFetch = useAuthenticatedFetch();
 
   const generateDescription = async (product) => {
@@ -35,43 +37,53 @@ export const Product = (product) => {
     console.log("%cmessage", "color:cyan; ", message);
   };
   return (
-    <React.Fragment>
-      <HorizontalStack blockAlign="center" gap="20">
+    <Box>
+      <HorizontalStack blockAlign="center" gap="8">
         <HorizontalStack blockAlign="center" gap="6">
           <Box padding="3">
-            <Thumbnail
-              size="large"
-              source={product?.image?.url || NoteMinor}
-              style={{
-                margin: "1rem 0.75rem",
-              }}
-            />
+            <Thumbnail size="large" source={product?.image?.url || NoteMinor} />
           </Box>
-          <VerticalStack>
-            <Text fontWeight="bold">Product Name</Text>
-            <Text>{product.title}</Text>
-          </VerticalStack>
+          <Box padding="3">
+            <VerticalStack>
+              <Text fontWeight="bold">Product Name</Text>
+              <Text>{product.title}</Text>
+            </VerticalStack>
+          </Box>
         </HorizontalStack>
+
+        <Box padding="3">
+          <TextField
+            value={value}
+            onChange={setValue}
+            label="What should the AI focus on?"
+            placeholder="t-shirt, phone, shoes, etc."
+            type="text"
+          />
+        </Box>
         {product?.image?.url ? (
-          <Button
-            size="slim"
-            disabled={isLoading}
-            onClick={() => generateDescription(product)}
-          >
-            Generate description
-          </Button>
+          <Box padding="3">
+            <Button
+              size="slim"
+              disabled={isLoading}
+              onClick={() => generateDescription(product)}
+            >
+              Generate description
+            </Button>
+          </Box>
         ) : (
           <Tooltip
             dismissOnMouseOut
             content="You must add an image to generate a description"
           >
-            <Button size="slim" disabled={!product?.image?.url}>
-              Generate description
-            </Button>
+            <Box padding="3">
+              <Button size="slim" disabled={!product?.image?.url}>
+                Generate description
+              </Button>
+            </Box>
           </Tooltip>
         )}
       </HorizontalStack>
       <Divider />
-    </React.Fragment>
+    </Box>
   );
 };

@@ -1,11 +1,11 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Text,
+  TextField,
   Page,
   HorizontalStack,
   VerticalStack,
   Button,
-  TextField,
   LegacyCard,
   SkeletonDisplayText,
 } from "@shopify/polaris";
