@@ -185,7 +185,6 @@ app.get("/api/products", async (_req, res) => {
   });
 
   const pageInfo = data.body.data.products.pageInfo;
-  console.log("%cpageInfo", "color:cyan; ", pageInfo);
   const products = data.body.data.products.edges.map((edge) => ({
     id: edge.node.id,
     title: edge.node.title,

@@ -5,31 +5,23 @@ import {
   HorizontalStack,
   VerticalStack,
   Button,
-  Checkbox,
-  Box,
-  Tooltip,
   TextField,
   Pagination,
   LegacyCard,
-  Divider,
-  Thumbnail,
-  Modal,
   SkeletonDisplayText,
-  SkeletonBodyText,
-  SkeletonThumbnail,
 } from "@shopify/polaris";
-import { NoteMinor } from "@shopify/polaris-icons";
+
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
+import { Product } from "./Product";
+import { ProductSkeleton } from "./ProductSkeleton";
+import { GenerateDescriptionsForAllToolbar } from "./GenerateDescriptionsForAllToolbar";
 
 export function Home() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
-  const [isLoadingDescription, setIsLoadingDescription] = useState(false);
   const [value, setValue] = useState("");
   const [products, setProducts] = useState([]);
   const [searchedProducts, setSearchedProducts] = useState([]);
-  const [checked, setChecked] = useState(false);
-  const [active, setActive] = useState(false);
   const [pageInfo, setPageInfo] = useState({});
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
@@ -107,27 +99,7 @@ export function Home() {
     setIsLoadingProductSearch(false);
   };
 
-  const generateDescription = async (product) => {
-    setIsLoadingDescription(true);
-    const response = await authenticatedFetch("/api/products/generate", {
-      method: "POST",
-      body: JSON.stringify({
-        id: product.id,
-        productName: product.title,
-        photoUrl: product.image.url,
-      }),
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    const message = await response.json();
-
-    setIsLoadingDescription(false);
-    console.log("%cmessage", "color:cyan; ", message);
-  };
   const handleChange = (newValue) => setValue(newValue);
-  const handleCheck = (newChecked) => setChecked(newChecked);
-  const toggleModal = () => setActive(!active);
 
   const isPageLoading =
     isLoadingCount || isLoadingProducts || isLoadingProductSearch;
@@ -183,39 +155,17 @@ export function Home() {
             );
           }
         })()}
-        <HorizontalStack blockAlign="center" gap="4">
-          <Checkbox
-            label="Generate all descriptions"
-            checked={checked}
-            onChange={handleCheck}
-          />
-          <Button size="slim" disabled={!checked} onClick={toggleModal}>
-            Submit
-          </Button>
-        </HorizontalStack>
+        <GenerateDescriptionsForAllToolbar />
         <LegacyCard>
           <div style={{ display: "flex", flexDirection: "column" }}>
             {(() => {
               if (isPageLoading) {
                 return (
                   <>
-                    {Array(10)
+                    {Array(15)
                       .fill(null)
                       .map((_, index) => (
-                        <React.Fragment key={index}>
-                          <HorizontalStack blockAlign="center" gap="20">
-                            <HorizontalStack blockAlign="center" gap="6">
-                              <Box padding="3">
-                                <SkeletonThumbnail size="large" />
-                              </Box>
-                              <div style={{ width: "98px" }}>
-                                <SkeletonBodyText lines={2} />
-                              </div>
-                            </HorizontalStack>
-                            <Button size="slim">Generate description</Button>
-                          </HorizontalStack>
-                          <Divider />
-                        </React.Fragment>
+                        <ProductSkeleton key={index} />
                       ))}
                   </>
                 );
@@ -225,47 +175,7 @@ export function Home() {
                 return (
                   <>
                     {searchedProducts.map((product) => (
-                      <React.Fragment key={product.id}>
-                        <HorizontalStack blockAlign="center" gap="20">
-                          <HorizontalStack blockAlign="center" gap="6">
-                            <Box padding="3">
-                              <Thumbnail
-                                size="large"
-                                source={product?.image?.url || NoteMinor}
-                                style={{
-                                  margin: "1rem 0.75rem",
-                                }}
-                              />
-                            </Box>
-                            <VerticalStack>
-                              <Text fontWeight="bold">Product Name</Text>
-                              <Text>{product.title}</Text>
-                            </VerticalStack>
-                          </HorizontalStack>
-                          {product?.image?.url ? (
-                            <Button
-                              size="slim"
-                              disabled={isLoadingDescription}
-                              onClick={() => generateDescription(product)}
-                            >
-                              Generate description
-                            </Button>
-                          ) : (
-                            <Tooltip
-                              dismissOnMouseOut
-                              content="You must add an image to generate a description"
-                            >
-                              <Button
-                                size="slim"
-                                disabled={!product?.image?.url}
-                              >
-                                Generate description
-                              </Button>
-                            </Tooltip>
-                          )}
-                        </HorizontalStack>
-                        <Divider />
-                      </React.Fragment>
+                      <Product key={product.id} {...product} />
                     ))}
                   </>
                 );
@@ -275,46 +185,7 @@ export function Home() {
                 return (
                   <>
                     {products.map((product) => (
-                      <React.Fragment key={product.id}>
-                        <HorizontalStack blockAlign="center" gap="20">
-                          <HorizontalStack blockAlign="center" gap="6">
-                            <Box padding="3">
-                              <Thumbnail
-                                size="large"
-                                source={product?.image?.url || NoteMinor}
-                                style={{
-                                  margin: "1rem 0.75rem",
-                                }}
-                              />
-                            </Box>
-                            <VerticalStack>
-                              <Text fontWeight="bold">Product Name</Text>
-                              <Text>{product.title}</Text>
-                            </VerticalStack>
-                          </HorizontalStack>
-                          {product?.image?.url ? (
-                            <Button
-                              size="slim"
-                              onClick={() => generateDescription(product)}
-                            >
-                              Generate description
-                            </Button>
-                          ) : (
-                            <Tooltip
-                              dismissOnMouseOut
-                              content="You must add an image to generate a description"
-                            >
-                              <Button
-                                size="slim"
-                                disabled={!product?.image?.url}
-                              >
-                                Generate description
-                              </Button>
-                            </Tooltip>
-                          )}
-                        </HorizontalStack>
-                        <Divider />
-                      </React.Fragment>
+                      <Product key={product.id} {...product} />
                     ))}
                   </>
                 );
@@ -330,28 +201,6 @@ export function Home() {
           onNext={getNextPage}
         />
       </VerticalStack>
-      <Modal
-        open={active}
-        onClose={toggleModal}
-        title="Confirm Action"
-        primaryAction={{
-          content: "Generate",
-          onAction: toggleModal,
-        }}
-        secondaryActions={[
-          {
-            content: "Cancel",
-            onAction: toggleModal,
-          },
-        ]}
-      >
-        <Modal.Section>
-          <Text>
-            Are you sure you want to generate descriptions for all products on
-            this page?
-          </Text>
-        </Modal.Section>
-      </Modal>
     </Page>
   );
 }
