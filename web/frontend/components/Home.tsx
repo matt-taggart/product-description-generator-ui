@@ -21,7 +21,7 @@ import {
 import { NoteMinor } from "@shopify/polaris-icons";
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 
-export function ProductsCard() {
+export function Home() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
   const [isLoadingDescription, setIsLoadingDescription] = useState(false);

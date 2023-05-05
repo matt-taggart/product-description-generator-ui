@@ -1,5 +1,5 @@
-import { ProductsCard } from "../components";
+import { Home } from "../components";
 
 export default function HomePage() {
-  return <ProductsCard />;
+  return <Home />;
 }
