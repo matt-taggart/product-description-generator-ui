@@ -131,7 +131,6 @@ export const Product = (product) => {
                   30 seconds.
                 </Text>
                 <ProgressBar progress={progress} color="success" />
-                {generatedText}
               </VerticalStack>
             )}
           </Box>
