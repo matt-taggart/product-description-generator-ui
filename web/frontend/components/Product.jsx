@@ -123,15 +123,22 @@ export const Product = (product) => {
         >
           <Box padding="8" justify="center" maxWidth="65ch">
             {generatedText ? (
-              <EditProductForm generatedText={generatedText} />
+              <EditProductForm
+                generatedText={generatedText}
+                setGeneratedText={setGeneratedText}
+              />
             ) : (
-              <VerticalStack gap="2">
-                <Text>
-                  We're writing your product description. This could take up to
-                  30 seconds.
-                </Text>
-                <ProgressBar progress={progress} color="success" />
-              </VerticalStack>
+              <>
+                {isLoading ? (
+                  <VerticalStack gap="2">
+                    <Text>
+                      We're writing your product description. This could take up
+                      to 30 seconds.
+                    </Text>
+                    <ProgressBar progress={progress} color="success" />
+                  </VerticalStack>
+                ) : null}
+              </>
             )}
           </Box>
         </Collapsible>
