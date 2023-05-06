@@ -13,6 +13,7 @@ import {
   Collapsible,
 } from "@shopify/polaris";
 import { NoteMinor } from "@shopify/polaris-icons";
+import { EditProductForm } from "./EditProductForm";
 import { useAuthenticatedFetch } from "../hooks";
 import "./Product.css";
 
@@ -120,15 +121,19 @@ export const Product = (product) => {
           transition={{ duration: "500ms", timingFunction: "ease-in-out" }}
           expandOnPrint
         >
-          <Box padding="8" justify="center" width="60h">
-            <VerticalStack gap="4">
-              <Text>
-                We're writing your product description. This could take up to 30
-                seconds.
-              </Text>
-              <ProgressBar progress={progress} color="success" />
-              {generatedText}
-            </VerticalStack>
+          <Box padding="8" justify="center" maxWidth="65ch">
+            {generatedText ? (
+              <EditProductForm generatedText={generatedText} />
+            ) : (
+              <VerticalStack gap="2">
+                <Text>
+                  We're writing your product description. This could take up to
+                  30 seconds.
+                </Text>
+                <ProgressBar progress={progress} color="success" />
+                {generatedText}
+              </VerticalStack>
+            )}
           </Box>
         </Collapsible>
         <Divider />
