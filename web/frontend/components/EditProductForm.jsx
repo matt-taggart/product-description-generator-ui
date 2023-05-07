@@ -17,14 +17,11 @@ export function EditProductForm({
   product,
   isGeneratingText,
   updateDescription,
+  description,
+  setDescription,
 }) {
-  const [description, setDescription] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
-
-  const handleSubmit = () => {
-    console.log("submitting...");
-  };
 
   useEffect(() => {
     setDescription(generatedText);
@@ -32,7 +29,7 @@ export function EditProductForm({
 
   return (
     <>
-      <Form onSubmit={handleSubmit}>
+      <Form>
         <FormLayout>
           <TextField
             multiline

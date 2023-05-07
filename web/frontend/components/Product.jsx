@@ -25,6 +25,7 @@ const DESCRIPTION_OFFSET_PERCENTAGE = 20;
 export const Product = (product) => {
   const [isGeneratingText, setIsGeneratingText] = useState(false);
   const [isUpdatingDescription, setIsUpdatingDescription] = useState(false);
+  const [description, setDescription] = useState("");
   const [isActiveToast, setIsActiveToast] = useState(false);
   const [value, setValue] = useState("");
   const [progress, setProgress] = useState(0);
@@ -33,7 +34,12 @@ export const Product = (product) => {
   const authenticatedFetch = useAuthenticatedFetch();
   const toggleActive = () => setIsActiveToast(!isActiveToast);
 
-  const isPanelOpen = progress > 0 || generatedText || isGeneratingText;
+  const isPanelOpen =
+    progress > 0 ||
+    generatedText ||
+    isGeneratingText ||
+    isUpdatingDescription ||
+    description;
 
   useEffect(() => {
     let iv;
@@ -96,6 +102,7 @@ export const Product = (product) => {
     });
     setIsUpdatingDescription(false);
     setGeneratedText("");
+    setDescription("");
     toggleActive();
   };
 
@@ -190,17 +197,20 @@ export const Product = (product) => {
                   </VerticalStack>
                 );
               }
-
-              return (
-                <EditProductForm
-                  generatedText={generatedText}
-                  setGeneratedText={setGeneratedText}
-                  generateDescription={generateDescription}
-                  updateDescription={updateDescription}
-                  isGeneratingText={isGeneratingText}
-                  product={product}
-                />
-              );
+              if (isPanelOpen) {
+                return (
+                  <EditProductForm
+                    generatedText={generatedText}
+                    setGeneratedText={setGeneratedText}
+                    generateDescription={generateDescription}
+                    updateDescription={updateDescription}
+                    isGeneratingText={isGeneratingText}
+                    product={product}
+                    setDescription={setDescription}
+                    description={description}
+                  />
+                );
+              }
             })()}
           </Box>
         </Collapsible>
