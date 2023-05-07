@@ -73,7 +73,7 @@ export const Product = (product) => {
                 source={product?.image?.url || NoteMinor}
               />
             </Box>
-            <Box padding="3">
+            <Box padding="3" width="20ch">
               <VerticalStack>
                 <Text fontWeight="bold">Product Name</Text>
                 <Text>{product.title}</Text>
