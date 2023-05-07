@@ -226,36 +226,41 @@ app.post("/api/products/update", async (_req, res) => {
       session: res.locals.shopify.session,
     });
     const { id, description } = _req.body;
-    console.log("%cid", "color:cyan; ", id);
-    console.log("%cdescription", "color:cyan; ", description);
 
-    const data = await client.query({
-      data: {
-        mutation: `
-          {
-            productUpdate(input: {
-              id: ${id},
-              descriptionHtml: ${description}
-            }) {
-              product {
-                id
-                descriptionHtml
-              }
-              userErrors {
-                field
-                message
-              }
-            }
+    const query = `
+      mutation productUpdate($input: ProductInput!) {
+        productUpdate(input: $input) {
+          product {
+            id
+            descriptionHtml
           }
-        `,
+          userErrors {
+            field
+            message
+          }
+        }
+      }
+      `;
+
+    const variables = {
+      input: {
+        id,
+        descriptionHtml: description,
+      },
+    };
+
+    await client.query({
+      data: {
+        query,
+        variables,
       },
     });
 
-    console.log("%cdata", "color:cyan; ", data);
+    res.status(201).send({ message: "updated product" });
+    return;
   } catch (e) {
-    console.log("%ce", "color:cyan; ", e);
+    res.status(400);
   }
-  res.status(201).send({ message: "" });
 });
 
 // const baseQuery = `
@@ -334,7 +339,6 @@ app.post("/api/products/generate", async (_req, res) => {
     });
     return;
   } catch (error) {
-    console.log("%cerror", "color:cyan; ", error);
     res.status(400).send({ message: "Something went wrong" });
     return;
   }

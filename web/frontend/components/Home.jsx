@@ -8,6 +8,7 @@ import {
   Button,
   LegacyCard,
   SkeletonDisplayText,
+  Frame,
 } from "@shopify/polaris";
 
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
@@ -74,100 +75,102 @@ export function Home() {
     isLoadingCount || isLoadingProducts || isLoadingProductSearch;
 
   return (
-    <Page>
-      <VerticalStack gap="4">
-        <Text variant="headingXl" as="h1">
-          Product Description Generator
-        </Text>
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            onSubmit();
-          }}
-        >
-          <TextField
-            value={value}
-            onChange={handleChange}
-            connectedRight={
-              <Button type="submit" primary onClick={onSubmit}>
-                Search
-              </Button>
-            }
-            autoComplete="off"
-            placeholder="Search for products"
-          />
-        </form>
-        {(() => {
-          if (isPageLoading) {
-            return <SkeletonDisplayText size="small" />;
-          }
-
-          if (searchedProducts?.length) {
-            return (
-              <HorizontalStack blockAlign="center" gap="4">
-                <Text>
-                  Displaying {searchedProducts.length} out of {data?.count}{" "}
-                  products
-                </Text>
-                <Button size="slim" onClick={() => setSearchedProducts([])}>
-                  Clear Search
+    <Frame>
+      <Page>
+        <VerticalStack gap="4">
+          <Text variant="headingXl" as="h1">
+            Product Description Generator
+          </Text>
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              onSubmit();
+            }}
+          >
+            <TextField
+              value={value}
+              onChange={handleChange}
+              connectedRight={
+                <Button type="submit" primary onClick={onSubmit}>
+                  Search
                 </Button>
-              </HorizontalStack>
-            );
-          }
+              }
+              autoComplete="off"
+              placeholder="Search for products"
+            />
+          </form>
+          {(() => {
+            if (isPageLoading) {
+              return <SkeletonDisplayText size="small" />;
+            }
 
-          if (products?.length) {
-            return (
-              <Text>
-                Displaying {products.length} out of {data?.count} products
-              </Text>
-            );
-          }
-        })()}
-        <GenerateDescriptionsForAllToolbar />
-        <LegacyCard>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            {(() => {
-              if (isPageLoading) {
-                return (
-                  <>
-                    {Array(15)
-                      .fill(null)
-                      .map((_, index) => (
-                        <ProductSkeleton key={index} />
+            if (searchedProducts?.length) {
+              return (
+                <HorizontalStack blockAlign="center" gap="4">
+                  <Text>
+                    Displaying {searchedProducts.length} out of {data?.count}{" "}
+                    products
+                  </Text>
+                  <Button size="slim" onClick={() => setSearchedProducts([])}>
+                    Clear Search
+                  </Button>
+                </HorizontalStack>
+              );
+            }
+
+            if (products?.length) {
+              return (
+                <Text>
+                  Displaying {products.length} out of {data?.count} products
+                </Text>
+              );
+            }
+          })()}
+          <GenerateDescriptionsForAllToolbar />
+          <LegacyCard>
+            <div style={{ display: "flex", flexDirection: "column" }}>
+              {(() => {
+                if (isPageLoading) {
+                  return (
+                    <>
+                      {Array(15)
+                        .fill(null)
+                        .map((_, index) => (
+                          <ProductSkeleton key={index} />
+                        ))}
+                    </>
+                  );
+                }
+
+                if (searchedProducts?.length) {
+                  return (
+                    <>
+                      {searchedProducts.map((product) => (
+                        <Product key={product.id} {...product} />
                       ))}
-                  </>
-                );
-              }
+                    </>
+                  );
+                }
 
-              if (searchedProducts?.length) {
-                return (
-                  <>
-                    {searchedProducts.map((product) => (
-                      <Product key={product.id} {...product} />
-                    ))}
-                  </>
-                );
-              }
-
-              if (products?.length) {
-                return (
-                  <>
-                    {products.map((product) => (
-                      <Product key={product.id} {...product} />
-                    ))}
-                  </>
-                );
-              }
-            })()}
-          </div>
-        </LegacyCard>
-        <ProductPagination
-          pageInfo={pageInfo}
-          setIsLoadingProducts={setIsLoadingProducts}
-          setProductState={setProductState}
-        />
-      </VerticalStack>
-    </Page>
+                if (products?.length) {
+                  return (
+                    <>
+                      {products.map((product) => (
+                        <Product key={product.id} {...product} />
+                      ))}
+                    </>
+                  );
+                }
+              })()}
+            </div>
+          </LegacyCard>
+          <ProductPagination
+            pageInfo={pageInfo}
+            setIsLoadingProducts={setIsLoadingProducts}
+            setProductState={setProductState}
+          />
+        </VerticalStack>
+      </Page>
+    </Frame>
   );
 }

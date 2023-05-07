@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Toast,
   Text,
   HorizontalStack,
   VerticalStack,
@@ -24,10 +25,13 @@ const DESCRIPTION_OFFSET_PERCENTAGE = 20;
 export const Product = (product) => {
   const [isGeneratingText, setIsGeneratingText] = useState(false);
   const [isUpdatingDescription, setIsUpdatingDescription] = useState(false);
+  const [isActiveToast, setIsActiveToast] = useState(false);
   const [value, setValue] = useState("");
   const [progress, setProgress] = useState(0);
   const [generatedText, setGeneratedText] = useState("");
+
   const authenticatedFetch = useAuthenticatedFetch();
+  const toggleActive = () => setIsActiveToast(!isActiveToast);
 
   const isPanelOpen = progress > 0 || generatedText || isGeneratingText;
 
@@ -91,9 +95,16 @@ export const Product = (product) => {
       },
     });
     setIsUpdatingDescription(false);
+    setGeneratedText("");
+    toggleActive();
   };
+
+  const toastMarkup = isActiveToast ? (
+    <Toast content="Product description updated!" onDismiss={toggleActive} />
+  ) : null;
   return (
     <Box>
+      {toastMarkup}
       <VerticalStack>
         <HorizontalStack blockAlign="center" gap="8">
           <HorizontalStack blockAlign="center" gap="6">
