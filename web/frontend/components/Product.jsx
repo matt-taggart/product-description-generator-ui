@@ -122,14 +122,9 @@ export const Product = (product) => {
           expandOnPrint
         >
           <Box padding="8" justify="center" maxWidth="65ch">
-            {generatedText ? (
-              <EditProductForm
-                generatedText={generatedText}
-                setGeneratedText={setGeneratedText}
-              />
-            ) : (
-              <>
-                {isLoading ? (
+            {(() => {
+              if (isLoading) {
+                return (
                   <VerticalStack gap="2">
                     <Text>
                       We're writing your product description. This could take up
@@ -137,9 +132,19 @@ export const Product = (product) => {
                     </Text>
                     <ProgressBar progress={progress} color="success" />
                   </VerticalStack>
-                ) : null}
-              </>
-            )}
+                );
+              }
+
+              return (
+                <EditProductForm
+                  generatedText={generatedText}
+                  setGeneratedText={setGeneratedText}
+                  generateDescription={generateDescription}
+                  isLoading={isLoading}
+                  product={product}
+                />
+              );
+            })()}
           </Box>
         </Collapsible>
         <Divider />

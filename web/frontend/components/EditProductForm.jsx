@@ -10,7 +10,13 @@ import {
 } from "@shopify/polaris";
 import { RedoMajor } from "@shopify/polaris-icons";
 
-export function EditProductForm({ generatedText = "", setGeneratedText }) {
+export function EditProductForm({
+  generatedText = "",
+  setGeneratedText,
+  generateDescription,
+  product,
+  isLoading,
+}) {
   const [description, setDescription] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
@@ -38,7 +44,11 @@ export function EditProductForm({ generatedText = "", setGeneratedText }) {
             <Button primary onClick={toggleModal}>
               Submit
             </Button>
-            <Button icon={RedoMajor} submit>
+            <Button
+              isLoading={isLoading}
+              icon={RedoMajor}
+              onClick={() => generateDescription(product)}
+            >
               Redo
             </Button>
             <Button onClick={() => setGeneratedText("")}>Cancel</Button>
