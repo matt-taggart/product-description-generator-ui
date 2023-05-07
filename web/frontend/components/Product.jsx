@@ -73,10 +73,16 @@ export const Product = (product) => {
                 source={product?.image?.url || NoteMinor}
               />
             </Box>
-            <Box padding="3" width="20ch">
+            <Box width="15ch">
               <VerticalStack>
                 <Text fontWeight="bold">Product Name</Text>
-                <Text>{product.title}</Text>
+                {product?.title?.length >= 20 ? (
+                  <Tooltip dismissOnMouseOut content={product.title}>
+                    <Text truncate>{product.title}</Text>
+                  </Tooltip>
+                ) : (
+                  <Text truncate>{product.title}</Text>
+                )}
               </VerticalStack>
             </Box>
           </HorizontalStack>
