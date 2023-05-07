@@ -15,7 +15,8 @@ export function EditProductForm({
   setGeneratedText,
   generateDescription,
   product,
-  isLoading,
+  isGeneratingText,
+  updateDescription,
 }) {
   const [description, setDescription] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -45,7 +46,7 @@ export function EditProductForm({
               Submit
             </Button>
             <Button
-              isLoading={isLoading}
+              isLoading={isGeneratingText}
               icon={RedoMajor}
               onClick={() => generateDescription(product)}
             >
@@ -61,7 +62,10 @@ export function EditProductForm({
         title="Confirm Action"
         primaryAction={{
           content: "Confirm",
-          onAction: toggleModal,
+          onAction: () => {
+            updateDescription();
+            toggleModal();
+          },
         }}
         secondaryActions={[
           {

@@ -18,32 +18,47 @@ import { useAuthenticatedFetch } from "../hooks";
 import "./Product.css";
 
 const INTERVAL = 1000;
-const OFFSET_PERCENTAGE = 5;
+const GENERATION_OFFSET_PERCENTAGE = 5;
+const DESCRIPTION_OFFSET_PERCENTAGE = 20;
 
 export const Product = (product) => {
-  const [isLoading, setLoading] = useState(false);
+  const [isGeneratingText, setIsGeneratingText] = useState(false);
+  const [isUpdatingDescription, setIsUpdatingDescription] = useState(false);
   const [value, setValue] = useState("");
   const [progress, setProgress] = useState(0);
   const [generatedText, setGeneratedText] = useState("");
   const authenticatedFetch = useAuthenticatedFetch();
 
-  const isPanelOpen = progress > 0 || generatedText || isLoading;
+  const isPanelOpen = progress > 0 || generatedText || isGeneratingText;
 
   useEffect(() => {
     let iv;
-    if (isLoading) {
+    if (isGeneratingText) {
       iv = setInterval(() => {
-        setProgress(progress + OFFSET_PERCENTAGE);
+        setProgress(progress + GENERATION_OFFSET_PERCENTAGE);
       }, INTERVAL);
     }
 
     return () => {
       clearInterval(iv);
     };
-  }, [isLoading, progress]);
+  }, [isGeneratingText, progress]);
+
+  useEffect(() => {
+    let iv;
+    if (isUpdatingDescription) {
+      iv = setInterval(() => {
+        setProgress(progress + DESCRIPTION_OFFSET_PERCENTAGE);
+      }, INTERVAL);
+    }
+
+    return () => {
+      clearInterval(iv);
+    };
+  }, [isUpdatingDescription, progress]);
 
   const generateDescription = async (product) => {
-    setLoading(true);
+    setIsGeneratingText(true);
     const response = await authenticatedFetch("/api/products/generate", {
       method: "POST",
       body: JSON.stringify({
@@ -59,8 +74,23 @@ export const Product = (product) => {
     const data = await response.json();
 
     setGeneratedText(data.message);
-    setLoading(false);
+    setIsGeneratingText(false);
     setProgress(0);
+  };
+
+  const updateDescription = async () => {
+    setIsUpdatingDescription(true);
+    await authenticatedFetch("/api/products/update", {
+      method: "POST",
+      body: JSON.stringify({
+        id: product.id,
+        description: generatedText,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    setIsUpdatingDescription(false);
   };
   return (
     <Box>
@@ -102,7 +132,7 @@ export const Product = (product) => {
             <Box padding="3">
               <Button
                 size="slim"
-                disabled={isLoading}
+                disabled={isGeneratingText}
                 onClick={() => generateDescription(product)}
               >
                 Generate description
@@ -129,7 +159,7 @@ export const Product = (product) => {
         >
           <Box padding="8" justify="center" maxWidth="65ch">
             {(() => {
-              if (isLoading) {
+              if (isGeneratingText) {
                 return (
                   <VerticalStack gap="2">
                     <Text>
@@ -141,12 +171,22 @@ export const Product = (product) => {
                 );
               }
 
+              if (isUpdatingDescription) {
+                return (
+                  <VerticalStack gap="2">
+                    <Text>We're updating your product description...</Text>
+                    <ProgressBar progress={progress} color="success" />
+                  </VerticalStack>
+                );
+              }
+
               return (
                 <EditProductForm
                   generatedText={generatedText}
                   setGeneratedText={setGeneratedText}
                   generateDescription={generateDescription}
-                  isLoading={isLoading}
+                  updateDescription={updateDescription}
+                  isGeneratingText={isGeneratingText}
                   product={product}
                 />
               );
