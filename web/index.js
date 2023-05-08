@@ -278,6 +278,7 @@ app.post("/api/products/update", async (_req, res) => {
     const client = new shopify.api.clients.Graphql({
       session: res.locals.shopify.session,
     });
+    const shop = client.session.shop;
     const { id, description } = _req.body;
 
     const query = `
@@ -309,32 +310,27 @@ app.post("/api/products/update", async (_req, res) => {
       },
     });
 
+    const { data } = await supabase
+      .from("shops")
+      .select("product_description_update_count")
+      .eq("name", shop);
+
+    const product_description_update_count =
+      data[0]?.product_description_update_count;
+
+    await supabase
+      .from("shops")
+      .update({
+        product_description_update_count: product_description_update_count + 1,
+      })
+      .eq("name", shop);
+
     res.status(201).send({ message: "updated product" });
     return;
   } catch (e) {
     res.status(400);
   }
 });
-
-// const baseQuery = `
-// {
-//   mutation {
-//     productUpdate(input: {
-//       id: "gid://shopify/Product/1234567890",
-//       descriptionHtml: "This is the updated product description."
-//     }) {
-//       product {
-//         id
-//         descriptionHtml
-//       }
-//       userErrors {
-//         field
-//         message
-//       }
-//     }
-//   }
-// }
-// `;
 
 const replicate = new Replicate({
   // get your token from https://replicate.com/account
