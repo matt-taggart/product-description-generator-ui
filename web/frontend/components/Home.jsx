@@ -26,7 +26,6 @@ export function Home() {
   const [searchedProducts, setSearchedProducts] = useState([]);
   const [pageInfo, setPageInfo] = useState({});
   const [searchedPageInfo, setSearchedPageInfo] = useState({});
-  console.log("%csearchedPageInfo", "color:cyan; ", searchedPageInfo);
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
     url: "/api/products/count",
@@ -132,7 +131,13 @@ export function Home() {
                     Displaying {searchedProducts.length} out of {data?.count}{" "}
                     products
                   </Text>
-                  <Button size="slim" onClick={() => setSearchedProducts([])}>
+                  <Button
+                    size="slim"
+                    onClick={() => {
+                      setSearchedProducts([]);
+                      setValue("");
+                    }}
+                  >
                     Clear Search
                   </Button>
                 </HorizontalStack>
