@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
+  SkeletonBodyText,
   Text,
   TextField,
   Page,
@@ -25,6 +26,7 @@ export function Home() {
   const [products, setProducts] = useState([]);
   const [searchedProducts, setSearchedProducts] = useState([]);
   const [pageInfo, setPageInfo] = useState({});
+  const [searchedPageInfo, setSearchedPageInfo] = useState({});
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
     url: "/api/products/count",
@@ -70,9 +72,7 @@ export function Home() {
       },
     });
     const searchedProducts = await response.json();
-
-    setSearchedProducts(searchedProducts);
-    setIsLoadingProductSearch(false);
+    setSearchedProductState(searchedProducts);
   };
 
   const handleChange = (newValue) => setValue(newValue);
@@ -81,6 +81,12 @@ export function Home() {
     setProducts(productResponse?.products);
     setPageInfo(productResponse?.pageInfo);
     setIsLoadingProducts(false);
+  };
+
+  const setSearchedProductState = (productResponse) => {
+    setSearchedProducts(productResponse?.products);
+    setSearchedPageInfo(productResponse?.pageInfo);
+    setIsLoadingProductSearch(false);
   };
 
   const isPageLoading =
@@ -145,7 +151,11 @@ export function Home() {
             <HorizontalStack align="space-between">
               <GenerateDescriptionsForAllToolbar />
               <div style={{ alignSelf: "flex-end" }}>
-                <Text>{creditsRemaining} / 100 credits remaining</Text>
+                {isPageLoading ? (
+                  <SkeletonDisplayText size="small" />
+                ) : (
+                  <Text>{creditsRemaining} / 100 credits remaining</Text>
+                )}
                 <Button plain>Get more credits</Button>
               </div>
             </HorizontalStack>
@@ -196,9 +206,17 @@ export function Home() {
             </div>
           </LegacyCard>
           <ProductPagination
-            pageInfo={pageInfo}
-            setIsLoadingProducts={setIsLoadingProducts}
-            setProductState={setProductState}
+            pageInfo={searchedProducts?.length ? searchedPageInfo : pageInfo}
+            setIsLoadingProducts={
+              searchedProducts?.length
+                ? setIsLoadingProductSearch
+                : setIsLoadingProducts
+            }
+            setProductState={
+              searchedProducts?.length
+                ? setSearchedProductState
+                : setProductState
+            }
           />
         </VerticalStack>
       </Page>

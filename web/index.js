@@ -79,7 +79,7 @@ app.post("/api/products/search", async (_req, res) => {
       url: edge.node.images?.edges[0]?.node?.url,
     },
   }));
-  res.send(products);
+  res.send({ products });
 });
 
 app.get("/api/products", async (_req, res) => {
