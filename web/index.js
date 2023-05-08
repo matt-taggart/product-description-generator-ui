@@ -51,6 +51,12 @@ app.post("/api/products/search", async (_req, res) => {
       query: `
           {
             products(first: 15, query: "title:${searchText}*") {
+              pageInfo {
+                hasPreviousPage
+                hasNextPage
+                startCursor
+                endCursor
+              }
               edges {
                 node {
                   id
@@ -71,6 +77,7 @@ app.post("/api/products/search", async (_req, res) => {
     },
   });
 
+  const pageInfo = data.body.data.products.pageInfo;
   const products = data.body.data.products.edges.map((edge) => ({
     id: edge.node.id,
     title: edge.node.title,
@@ -79,7 +86,7 @@ app.post("/api/products/search", async (_req, res) => {
       url: edge.node.images?.edges[0]?.node?.url,
     },
   }));
-  res.send({ products });
+  res.send({ pageInfo, products });
 });
 
 app.get("/api/products", async (_req, res) => {

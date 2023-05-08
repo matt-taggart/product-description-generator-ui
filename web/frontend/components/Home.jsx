@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
-  SkeletonBodyText,
   Text,
   TextField,
   Page,
@@ -27,6 +26,7 @@ export function Home() {
   const [searchedProducts, setSearchedProducts] = useState([]);
   const [pageInfo, setPageInfo] = useState({});
   const [searchedPageInfo, setSearchedPageInfo] = useState({});
+  console.log("%csearchedPageInfo", "color:cyan; ", searchedPageInfo);
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
     url: "/api/products/count",
