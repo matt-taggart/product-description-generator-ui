@@ -16,11 +16,15 @@ import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 import { Product } from "./Product";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { ProductPagination } from "./ProductPagination";
+import { BuyCreditsModal } from "./BuyCreditsModal";
 import { GenerateDescriptionsForAllToolbar } from "./GenerateDescriptionsForAllToolbar";
 
 export function Home() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
   const [isLoadingProducts, setIsLoadingProducts] = useState(false);
+  const [isBuyCreditsModalOpen, setIsBuyCreditsModalOpen] = useState(false);
+  const toggleBuyCreditsModal = () =>
+    setIsBuyCreditsModalOpen(!isBuyCreditsModalOpen);
   const [value, setValue] = useState("");
   const [products, setProducts] = useState([]);
   const [searchedProducts, setSearchedProducts] = useState([]);
@@ -161,7 +165,13 @@ export function Home() {
                 ) : (
                   <Text>{creditsRemaining} / 100 credits remaining</Text>
                 )}
-                <Button plain>Get more credits</Button>
+                <Button plain onClick={toggleBuyCreditsModal}>
+                  Get more credits
+                </Button>
+                <BuyCreditsModal
+                  isBuyCreditsModalOpen={isBuyCreditsModalOpen}
+                  toggleBuyCreditsModal={toggleBuyCreditsModal}
+                />
               </div>
             </HorizontalStack>
           </Box>
