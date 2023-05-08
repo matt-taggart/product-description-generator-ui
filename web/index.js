@@ -283,11 +283,13 @@ app.post("/api/credits", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
+  const domain = client.client.domain;
+  const clientId = "78b49696400ca4c98a0144e026f5c527";
 
   const option = _req.body.option;
   const query = `
-    mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!) {
-      appPurchaseOneTimeCreate(name: $name, returnUrl: $returnUrl, price: $price) {
+    mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!, $test: Boolean) {
+      appPurchaseOneTimeCreate(name: $name, returnUrl: $returnUrl, price: $price, test: $test) {
         userErrors {
           field
           message
@@ -303,7 +305,7 @@ app.post("/api/credits", async (_req, res) => {
 
   const variables = {
     name: "App one-time purchase",
-    returnUrl: `https://${client.client.domain}`,
+    returnUrl: `https://${domain}/admin/apps/${clientId}`,
     price: {
       amount: option,
       currencyCode: "USD",
