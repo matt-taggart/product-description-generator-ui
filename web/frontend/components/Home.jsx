@@ -9,6 +9,7 @@ import {
   LegacyCard,
   SkeletonDisplayText,
   Frame,
+  Box,
 } from "@shopify/polaris";
 
 import { useAppQuery, useAuthenticatedFetch } from "../hooks";
@@ -29,6 +30,17 @@ export function Home() {
     url: "/api/products/count",
     reactQueryOptions: {},
   });
+
+  const {
+    data: generationData,
+    isLoading: isLoadingGenerations,
+    refetch,
+  } = useAppQuery({
+    url: "/api/generations",
+    reactQueryOptions: {},
+  });
+
+  const creditsRemaining = generationData?.creditsRemaining;
 
   const authenticatedFetch = useAuthenticatedFetch();
 
@@ -72,7 +84,10 @@ export function Home() {
   };
 
   const isPageLoading =
-    isLoadingCount || isLoadingProducts || isLoadingProductSearch;
+    isLoadingCount ||
+    isLoadingProducts ||
+    isLoadingProductSearch ||
+    isLoadingGenerations;
 
   return (
     <Frame>
@@ -120,13 +135,21 @@ export function Home() {
 
             if (products?.length) {
               return (
-                <Text>
+                <Text color="subdued">
                   Displaying {products.length} out of {data?.count} products
                 </Text>
               );
             }
           })()}
-          <GenerateDescriptionsForAllToolbar />
+          <Box width="100%">
+            <HorizontalStack align="space-between">
+              <GenerateDescriptionsForAllToolbar />
+              <div style={{ alignSelf: "flex-end" }}>
+                <Text>{creditsRemaining} / 100 credits remaining</Text>
+                <Button plain>Get more credits</Button>
+              </div>
+            </HorizontalStack>
+          </Box>
           <LegacyCard>
             <div style={{ display: "flex", flexDirection: "column" }}>
               {(() => {
@@ -146,7 +169,11 @@ export function Home() {
                   return (
                     <>
                       {searchedProducts.map((product) => (
-                        <Product key={product.id} {...product} />
+                        <Product
+                          key={product.id}
+                          {...product}
+                          refetch={refetch}
+                        />
                       ))}
                     </>
                   );
@@ -156,7 +183,11 @@ export function Home() {
                   return (
                     <>
                       {products.map((product) => (
-                        <Product key={product.id} {...product} />
+                        <Product
+                          key={product.id}
+                          {...product}
+                          refetch={refetch}
+                        />
                       ))}
                     </>
                   );

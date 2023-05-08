@@ -5,7 +5,9 @@ import express from "express";
 import serveStatic from "serve-static";
 import Replicate from "replicate";
 import { Configuration, OpenAIApi } from "openai";
+import { v4 as uuidv4 } from "uuid";
 
+import { supabase } from "./supabaseClient.js";
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
 import GDPRWebhookHandlers from "./gdpr.js";
@@ -84,6 +86,27 @@ app.get("/api/products", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
+
+  const returnUrl = client.client.domain;
+  const shop = client.session.shop;
+  const { error, count } = await supabase
+    .from("shops")
+    .select("name", { count: "exact" })
+    .eq("name", shop);
+
+  if (error) {
+    return res.status(400);
+  }
+
+  if (count === 0) {
+    await supabase.from("shops").insert({
+      id: uuidv4(),
+      name: shop,
+      generation_count: 0,
+      credits_remaining: 0,
+    });
+  }
+
   const after = _req.query?.after;
   const before = _req.query?.before;
 
@@ -197,6 +220,36 @@ app.get("/api/products", async (_req, res) => {
     pageInfo,
     products,
   });
+});
+
+app.get("/api/generations", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+
+  const shop = client.session.shop;
+  const { data, error } = await supabase
+    .from("shops")
+    .select("*")
+    .eq("name", shop);
+
+  if (error) {
+    return res.status(400);
+  }
+
+  const count = data?.length;
+  if (count === 0) {
+    await supabase.from("shops").insert({
+      id: uuidv4(),
+      name: shop,
+      generation_count: 0,
+      credits_remaining: 0,
+    });
+  }
+
+  const creditsRemaining = data[0]?.credits_remaining;
+
+  res.status(200).send({ creditsRemaining });
 });
 
 app.get("/api/products/count", async (_req, res) => {
@@ -333,6 +386,22 @@ app.post("/api/products/generate", async (_req, res) => {
       });
 
     await delay(2000);
+
+    const { data } = await supabase
+      .from("shops")
+      .select("generation_count, credits_remaining")
+      .eq("name", shop);
+    const generation_count = data[0]?.generation_count;
+    const credits_remaining = data[0]?.credits_remaining;
+
+    await supabase
+      .from("shops")
+      .update({
+        generation_count: generation_count + 1,
+        credits_remaining: credits_remaining - 1,
+      })
+      .eq("name", shop);
+
     res.send({
       message:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",

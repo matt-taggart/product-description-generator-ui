@@ -86,6 +86,7 @@ export const Product = (product) => {
     setGeneratedText(data.message);
     setIsGeneratingText(false);
     setProgress(0);
+    product.refetch();
   };
 
   const updateDescription = async () => {
