@@ -7,7 +7,7 @@ import {
   Modal,
 } from "@shopify/polaris";
 
-export const GenerateDescriptionsForAllToolbar = () => {
+export const GenerateDescriptionsForAllToolbar = ({ productCount }) => {
   const [checked, setChecked] = useState(false);
   const handleChecked = (newChecked) => setChecked(newChecked);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -43,7 +43,7 @@ export const GenerateDescriptionsForAllToolbar = () => {
         <Modal.Section>
           <Text>
             Are you sure you want to generate descriptions for all products on
-            this page?
+            this page? This will use {productCount} credits.
           </Text>
         </Modal.Section>
       </Modal>

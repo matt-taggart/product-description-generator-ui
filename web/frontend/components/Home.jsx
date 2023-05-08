@@ -158,7 +158,13 @@ export function Home() {
           })()}
           <Box width="100%">
             <HorizontalStack align="space-between">
-              <GenerateDescriptionsForAllToolbar />
+              <GenerateDescriptionsForAllToolbar
+                productCount={
+                  searchedProducts?.length
+                    ? searchedProducts.length
+                    : products.length
+                }
+              />
               <div style={{ alignSelf: "flex-end" }}>
                 {isPageLoading ? (
                   <SkeletonDisplayText size="small" />

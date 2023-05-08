@@ -9,13 +9,37 @@ import {
   VerticalStack,
   HorizontalStack,
 } from "@shopify/polaris";
+import { Redirect } from "@shopify/app-bridge/actions";
+import { useAppBridge } from "@shopify/app-bridge-react";
+import { useAuthenticatedFetch } from "../hooks";
 
 export function BuyCreditsModal({
   isBuyCreditsModalOpen,
   toggleBuyCreditsModal,
 }) {
-  const [value, setValue] = useState("disabled");
+  const app = useAppBridge();
+  const redirect = Redirect.create(app);
+  const [value, setValue] = useState("10");
   const handleChange = (_, newValue) => setValue(newValue);
+  const authenticatedFetch = useAuthenticatedFetch();
+
+  const onSubmit = async () => {
+    const response = await authenticatedFetch("/api/credits", {
+      method: "POST",
+      body: JSON.stringify({
+        option: value,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const data = await response.json();
+    redirect.dispatch(
+      Redirect.Action.REMOTE,
+      decodeURIComponent(data.confirmationUrl)
+    );
+  };
+
   return (
     <>
       <Modal
@@ -25,7 +49,7 @@ export function BuyCreditsModal({
         primaryAction={{
           content: "Start Purchase",
           onAction: () => {
-            updateDescription();
+            onSubmit();
             toggleBuyCreditsModal();
           },
         }}
@@ -59,7 +83,7 @@ export function BuyCreditsModal({
                 />{" "}
                 <RadioButton
                   label={
-                    <HorizontalStack gap="3">
+                    <HorizontalStack gap="4">
                       <Text>350 credits</Text>
                       <Badge status="info">Most Popular</Badge>
                     </HorizontalStack>

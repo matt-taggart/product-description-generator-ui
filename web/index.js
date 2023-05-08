@@ -94,7 +94,6 @@ app.get("/api/products", async (_req, res) => {
     session: res.locals.shopify.session,
   });
 
-  const returnUrl = client.client.domain;
   const shop = client.session.shop;
   const { error, count } = await supabase
     .from("shops")
@@ -278,6 +277,52 @@ app.get("/api/products/create", async (_req, res) => {
     error = e.message;
   }
   res.status(status).send({ success: status === 200, error });
+});
+
+app.post("/api/credits", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+
+  const option = _req.body.option;
+  const query = `
+    mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!) {
+      appPurchaseOneTimeCreate(name: $name, returnUrl: $returnUrl, price: $price) {
+        userErrors {
+          field
+          message
+        }
+        appPurchaseOneTime {
+          createdAt
+          id
+        }
+        confirmationUrl
+      }
+    }
+  `;
+
+  const variables = {
+    name: "App one-time purchase",
+    returnUrl: `https://${client.client.domain}`,
+    price: {
+      amount: option,
+      currencyCode: "USD",
+    },
+    test: true,
+  };
+
+  const response = await client.query({
+    data: {
+      query,
+      variables,
+    },
+  });
+
+  const id = response.body.data.appPurchaseOneTimeCreate.appPurchaseOneTime.id;
+  const confirmationUrl =
+    response.body.data.appPurchaseOneTimeCreate.confirmationUrl;
+
+  res.send({ id, confirmationUrl });
 });
 
 app.post("/api/products/update", async (_req, res) => {
