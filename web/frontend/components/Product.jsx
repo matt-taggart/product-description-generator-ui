@@ -115,10 +115,13 @@ export const Product = (product) => {
   useEffect(() => {
     emitter.on(DISPATCH_GENERATE_EVENT, () => {
       if (product?.image?.url) {
-        console.log("%cproduct generating", "color:cyan; ", product.id);
         generateDescription(product);
       }
     });
+
+    return () => {
+      emitter.off(DISPATCH_GENERATE_EVENT);
+    };
   }, [emitter, generateDescription, product]);
   return (
     <Box>
