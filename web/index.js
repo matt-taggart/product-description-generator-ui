@@ -213,9 +213,20 @@ app.get("/api/generations", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-
-  const shop = client.session.shop;
-  const { data } = await supabase.from("shops").select("*").eq("name", shop);
+  const shopIdQuery = `
+      {
+        shop {
+          id
+        }
+      }
+    `;
+  const response = await client.query({
+    data: {
+      query: shopIdQuery,
+    },
+  });
+  const id = response.body.data.shop.id;
+  const { data } = await supabase.from("shops").select("*").eq("shop_id", id);
 
   const creditsRemaining = data[0]?.credits_remaining || 0;
 
@@ -288,22 +299,34 @@ app.post("/api/credits", async (_req, res) => {
     },
   });
 
+  const shopIdQuery = `
+      {
+        shop {
+          id
+        }
+      }
+    `;
+  const shopResponse = await client.query({
+    data: {
+      query: shopIdQuery,
+    },
+  });
+  const shopId = shopResponse.body.data.shop.id;
+
   const { count } = await supabase
     .from("shops")
     .select("name", { count: "exact" })
-    .eq("name", shop);
+    .eq("shop_id", shopId);
 
   if (count === 0) {
     await supabase.from("shops").insert({
       id: uuidv4(),
+      shop_id: shopId,
       name: shop,
       generation_count: 0,
       credits_remaining: 0,
     });
   }
-
-  const { data } = await supabase.from("shops").select("id").eq("name", shop);
-  const shop_id = data[0]?.id;
 
   const getCreditsApplied = (option) => {
     switch (option) {
@@ -318,7 +341,7 @@ app.post("/api/credits", async (_req, res) => {
 
   await supabase.from("billing").insert({
     id: uuidv4(),
-    shop_id,
+    shop_id: shopId,
     amount_billed: option,
     credits_applied: getCreditsApplied(option),
   });
@@ -367,10 +390,24 @@ app.post("/api/products/update", async (_req, res) => {
       },
     });
 
+    const shopIdQuery = `
+      {
+        shop {
+          id
+        }
+      }
+    `;
+    const shopResponse = await client.query({
+      data: {
+        query: shopIdQuery,
+      },
+    });
+    const shopId = shopResponse.body.data.shop.id;
+
     const { data } = await supabase
       .from("shops")
       .select("product_description_update_count")
-      .eq("name", shop);
+      .eq("shop_id", shopId);
 
     const product_description_update_count =
       data[0]?.product_description_update_count;
@@ -380,7 +417,7 @@ app.post("/api/products/update", async (_req, res) => {
       .update({
         product_description_update_count: product_description_update_count + 1,
       })
-      .eq("name", shop);
+      .eq("shop_id", shopId);
 
     res.status(201).send({ message: "updated product" });
     return;
@@ -404,6 +441,7 @@ app.post("/api/products/generate", async (_req, res) => {
   });
   const shop = client.session.shop;
   const { photoUrl, productName, shouldDescribe } = _req.body;
+  console.log("%c_req.body;", "color:cyan; ", _req.body);
 
   try {
     // const output = await replicate.run(
@@ -439,21 +477,9 @@ app.post("/api/products/generate", async (_req, res) => {
       });
 
     await delay(2000);
+    // get shop id and call stored procedure
 
-    const { data } = await supabase
-      .from("shops")
-      .select("generation_count, credits_remaining")
-      .eq("name", shop);
-    const generation_count = data[0]?.generation_count;
-    const credits_remaining = data[0]?.credits_remaining;
-
-    await supabase
-      .from("shops")
-      .update({
-        generation_count: generation_count + 1,
-        credits_remaining: credits_remaining - 1,
-      })
-      .eq("name", shop);
+    // update generation count and credits remaining
 
     res.send({
       message:

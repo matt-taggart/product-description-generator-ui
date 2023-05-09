@@ -16,6 +16,7 @@ import {
 import { NoteMinor } from "@shopify/polaris-icons";
 import { EditProductForm } from "./EditProductForm";
 import { useAuthenticatedFetch } from "../hooks";
+import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import "./Product.css";
 
 const INTERVAL = 1000;
@@ -110,6 +111,15 @@ export const Product = (product) => {
   const toastMarkup = isActiveToast ? (
     <Toast content="Product description updated!" onDismiss={toggleActive} />
   ) : null;
+
+  useEffect(() => {
+    emitter.on(DISPATCH_GENERATE_EVENT, () => {
+      if (product?.image?.url) {
+        console.log("%cproduct generating", "color:cyan; ", product.id);
+        generateDescription(product);
+      }
+    });
+  }, [emitter, generateDescription, product]);
   return (
     <Box>
       {toastMarkup}

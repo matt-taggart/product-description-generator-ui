@@ -57,6 +57,7 @@ export function Home() {
     const productResponse = await response.json();
 
     setProductState(productResponse);
+    setSearchedProductState([]);
   }, []);
 
   useEffect(() => {
@@ -76,6 +77,7 @@ export function Home() {
     });
     const searchedProducts = await response.json();
     setSearchedProductState(searchedProducts);
+    setProducts([]);
   };
 
   const handleChange = (newValue) => setValue(newValue);
@@ -97,6 +99,18 @@ export function Home() {
     isLoadingProducts ||
     isLoadingProductSearch ||
     isLoadingGenerations;
+
+  const getCreditsRemainingTextColor = (creditsRemaining) => {
+    if (creditsRemaining === 0) {
+      return "critical";
+    }
+
+    if (creditsRemaining < 5) {
+      return "warning";
+    }
+
+    return null;
+  };
 
   return (
     <Frame>
@@ -169,7 +183,9 @@ export function Home() {
                 {isPageLoading ? (
                   <SkeletonDisplayText size="small" />
                 ) : (
-                  <Text>{creditsRemaining} credits remaining</Text>
+                  <Text color={getCreditsRemainingTextColor(creditsRemaining)}>
+                    {creditsRemaining} credits remaining
+                  </Text>
                 )}
                 <Button plain onClick={toggleBuyCreditsModal}>
                   Get more credits

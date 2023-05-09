@@ -6,12 +6,17 @@ import {
   Checkbox,
   Modal,
 } from "@shopify/polaris";
+import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 
 export const GenerateDescriptionsForAllToolbar = ({ productCount }) => {
   const [checked, setChecked] = useState(false);
   const handleChecked = (newChecked) => setChecked(newChecked);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
+
+  const dispatchAllDescriptions = () => {
+    emitter.emit(DISPATCH_GENERATE_EVENT);
+  };
 
   return (
     <>
@@ -31,7 +36,11 @@ export const GenerateDescriptionsForAllToolbar = ({ productCount }) => {
         title="Confirm Action"
         primaryAction={{
           content: "Generate",
-          onAction: toggleModal,
+          onAction: () => {
+            toggleModal();
+            setChecked(false);
+            dispatchAllDescriptions();
+          },
         }}
         secondaryActions={[
           {
