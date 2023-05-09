@@ -94,25 +94,6 @@ app.get("/api/products", async (_req, res) => {
     session: res.locals.shopify.session,
   });
 
-  const shop = client.session.shop;
-  const { error, count } = await supabase
-    .from("shops")
-    .select("name", { count: "exact" })
-    .eq("name", shop);
-
-  if (error) {
-    return res.status(400);
-  }
-
-  if (count === 0) {
-    await supabase.from("shops").insert({
-      id: uuidv4(),
-      name: shop,
-      generation_count: 0,
-      credits_remaining: 0,
-    });
-  }
-
   const after = _req.query?.after;
   const before = _req.query?.before;
 
@@ -234,26 +215,9 @@ app.get("/api/generations", async (_req, res) => {
   });
 
   const shop = client.session.shop;
-  const { data, error } = await supabase
-    .from("shops")
-    .select("*")
-    .eq("name", shop);
+  const { data } = await supabase.from("shops").select("*").eq("name", shop);
 
-  if (error) {
-    return res.status(400);
-  }
-
-  const count = data?.length;
-  if (count === 0) {
-    await supabase.from("shops").insert({
-      id: uuidv4(),
-      name: shop,
-      generation_count: 0,
-      credits_remaining: 0,
-    });
-  }
-
-  const creditsRemaining = data[0]?.credits_remaining;
+  const creditsRemaining = data[0]?.credits_remaining || 0;
 
   res.status(200).send({ creditsRemaining });
 });
@@ -262,6 +226,7 @@ app.get("/api/products/count", async (_req, res) => {
   const countData = await shopify.api.rest.Product.count({
     session: res.locals.shopify.session,
   });
+
   res.status(200).send(countData);
 });
 
@@ -283,9 +248,8 @@ app.post("/api/credits", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-  const domain = client.client.domain;
-  const clientId = "78b49696400ca4c98a0144e026f5c527";
 
+  const shop = client.client.domain;
   const option = _req.body.option;
   const query = `
     mutation AppPurchaseOneTimeCreate($name: String!, $price: MoneyInput!, $returnUrl: URL!, $test: Boolean) {
@@ -303,9 +267,13 @@ app.post("/api/credits", async (_req, res) => {
     }
   `;
 
+  const returnUrl = `https://${shop}?shop=${client.session.shop}&host=${btoa(
+    `${client.session.shop}/admin`
+  )}`;
+
   const variables = {
     name: "App one-time purchase",
-    returnUrl: `https://${domain}/admin/apps/${clientId}`,
+    returnUrl,
     price: {
       amount: option,
       currencyCode: "USD",
@@ -320,6 +288,41 @@ app.post("/api/credits", async (_req, res) => {
     },
   });
 
+  const { count } = await supabase
+    .from("shops")
+    .select("name", { count: "exact" })
+    .eq("name", shop);
+
+  if (count === 0) {
+    await supabase.from("shops").insert({
+      id: uuidv4(),
+      name: shop,
+      generation_count: 0,
+      credits_remaining: 0,
+    });
+  }
+
+  const { data } = await supabase.from("shops").select("id").eq("name", shop);
+  const shop_id = data[0]?.id;
+
+  const getCreditsApplied = (option) => {
+    switch (option) {
+      case "10":
+        return 100;
+      case "20":
+        return 200;
+      case "30":
+        return 350;
+    }
+  };
+
+  await supabase.from("billing").insert({
+    id: uuidv4(),
+    shop_id,
+    amount_billed: option,
+    credits_applied: getCreditsApplied(option),
+  });
+
   const id = response.body.data.appPurchaseOneTimeCreate.appPurchaseOneTime.id;
   const confirmationUrl =
     response.body.data.appPurchaseOneTimeCreate.confirmationUrl;
@@ -332,7 +335,7 @@ app.post("/api/products/update", async (_req, res) => {
     const client = new shopify.api.clients.Graphql({
       session: res.locals.shopify.session,
     });
-    const shop = client.session.shop;
+    const shop = client.client.domain;
     const { id, description } = _req.body;
 
     const query = `
