@@ -165,11 +165,11 @@ export function Home() {
                     : products.length
                 }
               />
-              <div style={{ alignSelf: "flex-end" }}>
+              <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
                 {isPageLoading ? (
                   <SkeletonDisplayText size="small" />
                 ) : (
-                  <Text>{creditsRemaining} / 100 credits remaining</Text>
+                  <Text>{creditsRemaining} credits remaining</Text>
                 )}
                 <Button plain onClick={toggleBuyCreditsModal}>
                   Get more credits
