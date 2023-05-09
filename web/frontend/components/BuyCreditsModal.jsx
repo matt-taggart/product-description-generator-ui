@@ -85,7 +85,7 @@ export function BuyCreditsModal({
                   label={
                     <HorizontalStack gap="4">
                       <Text>350 credits</Text>
-                      <Badge status="info">Most Popular</Badge>
+                      <Badge status="info">Best Value</Badge>
                     </HorizontalStack>
                   }
                   helpText="Cost $30. Includes volume discount of 50 credits"
