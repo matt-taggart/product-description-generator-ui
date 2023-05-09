@@ -477,9 +477,26 @@ app.post("/api/products/generate", async (_req, res) => {
       });
 
     await delay(2000);
-    // get shop id and call stored procedure
+
+    // get shop id
+    const shopIdQuery = `
+      {
+        shop {
+          id
+        }
+      }
+    `;
+    const response = await client.query({
+      data: {
+        query: shopIdQuery,
+      },
+    });
+    const shopId = response.body.data.shop.id;
 
     // update generation count and credits remaining
+    await supabase.rpc("update_credits_and_generations", {
+      shop_id: shopId,
+    });
 
     res.send({
       message:
