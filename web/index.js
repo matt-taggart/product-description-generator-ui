@@ -77,15 +77,53 @@ app.post("/api/products/search", async (_req, res) => {
     },
   });
 
-  const pageInfo = data.body.data.products.pageInfo;
-  const products = data.body.data.products.edges.map((edge) => ({
-    id: edge.node.id,
-    title: edge.node.title,
-    image: {
-      id: edge.node.images?.edges[0]?.node?.id,
-      url: edge.node.images?.edges[0]?.node?.url,
+  const shopIdQuery = `
+      {
+        shop {
+          id
+        }
+      }
+    `;
+  const response = await client.query({
+    data: {
+      query: shopIdQuery,
     },
-  }));
+  });
+  const shopId = response.body.data.shop.id;
+
+  const { data: generationData } = await supabase.rpc(
+    "get_most_recent_products",
+    {
+      shop_id_input: shopId,
+    }
+  );
+
+  const pageInfo = data.body.data.products.pageInfo;
+  const products = data.body.data.products.edges
+    .map((edge) => {
+      return {
+        id: edge.node.id,
+        title: edge.node.title,
+        image: {
+          id: edge.node.images?.edges[0]?.node?.id,
+          url: edge.node.images?.edges[0]?.node?.url,
+        },
+      };
+    })
+    .map((product) => {
+      const productGenerationData = generationData.find(
+        (generation) => generation.product_id === product.id
+      );
+
+      if (!!productGenerationData) {
+        return {
+          ...product,
+          generation: productGenerationData,
+        };
+      }
+
+      return product;
+    });
   res.send({ pageInfo, products });
 });
 
