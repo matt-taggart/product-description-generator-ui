@@ -68,6 +68,15 @@ export const Product = (product) => {
     };
   }, [isUpdatingDescription, progress]);
 
+  const cancelGeneration = async (product) => {
+    await authenticatedFetch(
+      `/api/products/generate/${encodeURIComponent(product.id)}`,
+      {
+        method: "DELETE",
+      }
+    );
+  };
+
   const generateDescription = async (product) => {
     setIsGeneratingText(true);
     const response = await authenticatedFetch("/api/products/generate", {
@@ -90,8 +99,9 @@ export const Product = (product) => {
     product.refetch();
   };
 
-  const updateDescription = async () => {
+  const updateDescription = async (product) => {
     setIsUpdatingDescription(true);
+    await cancelGeneration(product);
     await authenticatedFetch("/api/products/update", {
       method: "POST",
       body: JSON.stringify({
@@ -106,6 +116,7 @@ export const Product = (product) => {
     setGeneratedText("");
     setDescription("");
     toggleActive();
+    setProgress(0);
   };
 
   const toastMarkup = isActiveToast ? (
@@ -218,6 +229,7 @@ export const Product = (product) => {
               if (isPanelOpen) {
                 return (
                   <EditProductForm
+                    cancelGeneration={cancelGeneration}
                     generatedText={generatedText}
                     setGeneratedText={setGeneratedText}
                     generateDescription={generateDescription}

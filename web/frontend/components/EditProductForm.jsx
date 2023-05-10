@@ -19,6 +19,7 @@ export function EditProductForm({
   updateDescription,
   description,
   setDescription,
+  cancelGeneration,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
@@ -49,7 +50,14 @@ export function EditProductForm({
             >
               Redo
             </Button>
-            <Button onClick={() => setGeneratedText("")}>Cancel</Button>
+            <Button
+              onClick={() => {
+                setGeneratedText("");
+                cancelGeneration(product);
+              }}
+            >
+              Cancel
+            </Button>
           </ButtonGroup>
         </FormLayout>
       </Form>
@@ -60,7 +68,7 @@ export function EditProductForm({
         primaryAction={{
           content: "Confirm",
           onAction: () => {
-            updateDescription();
+            updateDescription(product);
             toggleModal();
           },
         }}

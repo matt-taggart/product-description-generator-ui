@@ -501,6 +501,16 @@ app.post("/api/products/update", async (_req, res) => {
   }
 });
 
+app.delete("/api/products/generate/:id", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+
+  await supabase.from("generations").delete().eq("product_id", _req.params.id);
+
+  res.send({ message: "deleted product generation" });
+});
+
 const replicate = new Replicate({
   // get your token from https://replicate.com/account
   auth: process.env.VITE_REPLICATE_API_TOKEN,
@@ -516,7 +526,6 @@ app.post("/api/products/generate", async (_req, res) => {
   });
   const shop = client.session.shop;
   const { id: productId, photoUrl, productName, shouldDescribe } = _req.body;
-  console.log("%c_req.body;", "color:cyan; ", _req.body);
 
   try {
     // const output = await replicate.run(
@@ -568,17 +577,13 @@ app.post("/api/products/generate", async (_req, res) => {
     });
     const shopId = response.body.data.shop.id;
 
-    // update generation count and credits remaining
-    //
-    const { data } = await supabase.from("generations").insert({
+    await supabase.from("generations").insert({
       id: uuidv4(),
       shop_id: shopId,
       product_id: productId,
       generated_text:
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
     });
-
-    console.log("%cdata", "color:cyan; ", data && data[0]);
 
     // update generation count and credits remaining
     await supabase.rpc("update_credits_and_generations", {
