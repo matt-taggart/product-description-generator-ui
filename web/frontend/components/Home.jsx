@@ -154,6 +154,7 @@ export function Home() {
                     onClick={() => {
                       setSearchedProducts([]);
                       setValue("");
+                      fetchProducts();
                     }}
                   >
                     Clear Search
