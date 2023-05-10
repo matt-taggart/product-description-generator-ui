@@ -194,15 +194,53 @@ app.get("/api/products", async (_req, res) => {
     },
   });
 
-  const pageInfo = data.body.data.products.pageInfo;
-  const products = data.body.data.products.edges.map((edge) => ({
-    id: edge.node.id,
-    title: edge.node.title,
-    image: {
-      id: edge.node.images?.edges[0]?.node?.id,
-      url: edge.node.images?.edges[0]?.node?.url,
+  const shopIdQuery = `
+      {
+        shop {
+          id
+        }
+      }
+    `;
+  const response = await client.query({
+    data: {
+      query: shopIdQuery,
     },
-  }));
+  });
+  const shopId = response.body.data.shop.id;
+
+  const { data: generationData } = await supabase.rpc(
+    "get_most_recent_products",
+    {
+      shop_id_input: shopId,
+    }
+  );
+
+  const pageInfo = data.body.data.products.pageInfo;
+  const products = data.body.data.products.edges
+    .map((edge) => {
+      return {
+        id: edge.node.id,
+        title: edge.node.title,
+        image: {
+          id: edge.node.images?.edges[0]?.node?.id,
+          url: edge.node.images?.edges[0]?.node?.url,
+        },
+      };
+    })
+    .map((product) => {
+      const productGenerationData = generationData.find(
+        (generation) => generation.product_id === product.id
+      );
+
+      if (!!productGenerationData) {
+        return {
+          ...product,
+          generation: productGenerationData,
+        };
+      }
+
+      return product;
+    });
   res.send({
     pageInfo,
     products,
@@ -358,7 +396,6 @@ app.post("/api/products/update", async (_req, res) => {
     const client = new shopify.api.clients.Graphql({
       session: res.locals.shopify.session,
     });
-    const shop = client.client.domain;
     const { id, description } = _req.body;
 
     const query = `
@@ -440,7 +477,7 @@ app.post("/api/products/generate", async (_req, res) => {
     session: res.locals.shopify.session,
   });
   const shop = client.session.shop;
-  const { photoUrl, productName, shouldDescribe } = _req.body;
+  const { id: productId, photoUrl, productName, shouldDescribe } = _req.body;
   console.log("%c_req.body;", "color:cyan; ", _req.body);
 
   try {
@@ -492,6 +529,18 @@ app.post("/api/products/generate", async (_req, res) => {
       },
     });
     const shopId = response.body.data.shop.id;
+
+    // update generation count and credits remaining
+    //
+    const { data } = await supabase.from("generations").insert({
+      id: uuidv4(),
+      shop_id: shopId,
+      product_id: productId,
+      generated_text:
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+    });
+
+    console.log("%cdata", "color:cyan; ", data && data[0]);
 
     // update generation count and credits remaining
     await supabase.rpc("update_credits_and_generations", {
