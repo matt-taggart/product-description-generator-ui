@@ -14,6 +14,10 @@ export default {
     callbackUrl: "/api/webhooks",
     callback: async (topic, shop, body, webhookId) => {
       const payload = JSON.parse(body);
+
+      await supabase
+        .from("customer_data_requests")
+        .insert(JSON.stringify(payload));
       // Payload has the following shape:
       // {
       //   "shop_id": 954889,
@@ -32,6 +36,7 @@ export default {
       //     "id": 9999
       //   }
       // }
+      //
     },
   },
 
@@ -46,6 +51,9 @@ export default {
     callbackUrl: "/api/webhooks",
     callback: async (topic, shop, body, webhookId) => {
       const payload = JSON.parse(body);
+      await supabase
+        .from("customer_redactions")
+        .insert(JSON.stringify(payload));
       // Payload has the following shape:
       // {
       //   "shop_id": 954889,
@@ -75,6 +83,7 @@ export default {
     callbackUrl: "/api/webhooks",
     callback: async (topic, shop, body, webhookId) => {
       const payload = JSON.parse(body);
+      await supabase.from("shop_redactions").insert(JSON.stringify(payload));
       // Payload has the following shape:
       // {
       //   "shop_id": 954889,
