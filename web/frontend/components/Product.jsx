@@ -113,6 +113,10 @@ export const Product = (product) => {
   ) : null;
 
   useEffect(() => {
+    setGeneratedText(product?.generation?.generated_text);
+  }, [product?.generation]);
+
+  useEffect(() => {
     emitter.on(DISPATCH_GENERATE_EVENT, () => {
       if (product?.image?.url) {
         generateDescription(product);
