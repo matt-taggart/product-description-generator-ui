@@ -78,14 +78,14 @@ export const Product = (product) => {
     );
   };
 
-  const generateDescription = async (product) => {
+  const generateDescription = async (product, value) => {
     setIsGeneratingText(true);
     const response = await authenticatedFetch("/api/products/generate", {
       method: "POST",
       body: JSON.stringify({
-        id: product.id,
-        productName: product.title,
-        photoUrl: product.image.url,
+        id: product?.id,
+        productName: product?.title,
+        photoUrl: product?.image.url,
         shouldDescribe: value,
       }),
       headers: {
@@ -97,7 +97,7 @@ export const Product = (product) => {
     setGeneratedText(data.message);
     setIsGeneratingText(false);
     setProgress(0);
-    product.refetch();
+    product?.refetch();
   };
 
   const updateDescription = async (product) => {
@@ -129,6 +129,7 @@ export const Product = (product) => {
   }, [product?.generation]);
 
   useEffect(() => {
+    console.log("ON");
     emitter.on(DISPATCH_GENERATE_EVENT, () => {
       if (product?.image?.url) {
         generateDescription(product);
@@ -136,9 +137,10 @@ export const Product = (product) => {
     });
 
     return () => {
+      console.log("OFF");
       emitter.off(DISPATCH_GENERATE_EVENT);
     };
-  }, [emitter, generateDescription, product]);
+  }, []);
   return (
     <Box>
       {toastMarkup}
@@ -181,7 +183,7 @@ export const Product = (product) => {
               <Button
                 size="slim"
                 disabled={isGeneratingText}
-                onClick={() => generateDescription(product)}
+                onClick={() => generateDescription(product, value)}
               >
                 Generate description
               </Button>
