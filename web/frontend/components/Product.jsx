@@ -129,7 +129,6 @@ export const Product = (product) => {
   }, [product?.generation]);
 
   useEffect(() => {
-    console.log("ON");
     emitter.on(DISPATCH_GENERATE_EVENT, () => {
       if (product?.image?.url) {
         generateDescription(product);
@@ -137,7 +136,6 @@ export const Product = (product) => {
     });
 
     return () => {
-      console.log("OFF");
       emitter.off(DISPATCH_GENERATE_EVENT);
     };
   }, []);
