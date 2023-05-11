@@ -46,7 +46,8 @@ export const Product = (product) => {
     let iv;
     if (isGeneratingText) {
       iv = setInterval(() => {
-        setProgress(progress + GENERATION_OFFSET_PERCENTAGE);
+        const offset = progress > 45 ? 1 : GENERATION_OFFSET_PERCENTAGE;
+        setProgress(progress + offset);
       }, INTERVAL);
     }
 
@@ -210,8 +211,8 @@ export const Product = (product) => {
                 return (
                   <VerticalStack gap="2">
                     <Text>
-                      We're writing your product description. This could take up
-                      to one minute.
+                      We're writing your product description. This could take a
+                      minute or two.{" "}
                     </Text>
                     <ProgressBar progress={progress} color="success" />
                   </VerticalStack>

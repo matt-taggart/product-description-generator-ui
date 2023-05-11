@@ -527,12 +527,16 @@ app.post("/api/products/generate", async (_req, res) => {
   const { id: productId, photoUrl, shouldDescribe } = _req.body;
 
   try {
+    const message = shouldDescribe
+      ? `Please give a product description for the ${shouldDescribe} in the photo.`
+      : "Please give a product description for this photo.";
+
     const output = await replicate.run(
       "chen/minigpt-4_vicuna-13b:c1f0352f9da298ac874159e350d6d78139e3805b7e55f5df7c5b79a66ae19528",
       {
         input: {
           image: photoUrl,
-          message: `Please give a product description for this photo. Please focus on the ${shouldDescribe} in the photo.`,
+          message,
         },
       }
     );
@@ -542,7 +546,7 @@ app.post("/api/products/generate", async (_req, res) => {
       messages: [
         {
           role: "user",
-          content: `Context: ${output} \n\n Question: Can you please improve the wording of the product description provided in the context? Please focus on the ${shouldDescribe} in the photo.`,
+          content: `Context: ${output} \n\n Question: Can you please improve the product description provided in the context? The description should be coherent and make sense. Please focus on the ${shouldDescribe} in the photo. Please do not include a prefix to the description (like "Improved product description:"), as this message will be shown to a user.`,
         },
       ],
       temperature: 1,
