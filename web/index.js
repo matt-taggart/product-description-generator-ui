@@ -524,43 +524,29 @@ app.post("/api/products/generate", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-  const shop = client.session.shop;
-  const { id: productId, photoUrl, productName, shouldDescribe } = _req.body;
+  const { id: productId, photoUrl, shouldDescribe } = _req.body;
 
   try {
-    // const output = await replicate.run(
-    //   "chen/minigpt-4_vicuna-13b:c1f0352f9da298ac874159e350d6d78139e3805b7e55f5df7c5b79a66ae19528",
-    //   {
-    //     input: {
-    //       image: photoUrl,
-    //       message: `Please give a sales pitch for this photo. The product name is ${productName} and it should focus on ${shouldDescribe} in the photo.`,
-    //     },
-    //   }
-    // );
-    // console.log("%coutput", "color:cyan; ", output);
+    const output = await replicate.run(
+      "chen/minigpt-4_vicuna-13b:c1f0352f9da298ac874159e350d6d78139e3805b7e55f5df7c5b79a66ae19528",
+      {
+        input: {
+          image: photoUrl,
+          message: `Please give a product description for this photo. Please focus on the ${shouldDescribe} in the photo.`,
+        },
+      }
+    );
 
-    // const completion = await openai.createChatCompletion({
-    //   model: "gpt-3.5-turbo",
-    //   messages: [
-    //     {
-    //       role: "user",
-    //       content: `Context: ${output} \n\n Question: Can you please improve the wording of the text provided in the context? Please focus on the ${shouldDescribe} part of the description.`,
-    //     },
-    //   ],
-    //   temperature: 1,
-    // });
-
-    // console.log("%ccompletion", "color:cyan; ", completion.data.choices);
-    // res.send({ message: completion.data.choices[0].message.content });
-    // return;
-    const delay = (timeout) =>
-      new Promise((resolve) => {
-        setTimeout(() => {
-          resolve();
-        }, timeout);
-      });
-
-    await delay(2000);
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: `Context: ${output} \n\n Question: Can you please improve the wording of the product description provided in the context? Please focus on the ${shouldDescribe} in the photo.`,
+        },
+      ],
+      temperature: 1,
+    });
 
     // get shop id
     const shopIdQuery = `
@@ -577,12 +563,13 @@ app.post("/api/products/generate", async (_req, res) => {
     });
     const shopId = response.body.data.shop.id;
 
+    const generatedText = completion.data.choices[0].message.content;
+
     await supabase.from("generations").insert({
       id: uuidv4(),
       shop_id: shopId,
       product_id: productId,
-      generated_text:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+      generated_text: generatedText,
     });
 
     // update generation count and credits remaining
@@ -590,14 +577,9 @@ app.post("/api/products/generate", async (_req, res) => {
       shop_id: shopId,
     });
 
-    res.send({
-      message:
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
-    });
-    return;
+    res.send({ message: generatedText });
   } catch (error) {
     res.status(400).send({ message: "Something went wrong" });
-    return;
   }
 });
 

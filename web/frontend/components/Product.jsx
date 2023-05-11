@@ -20,7 +20,7 @@ import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import "./Product.css";
 
 const INTERVAL = 1000;
-const GENERATION_OFFSET_PERCENTAGE = 5;
+const GENERATION_OFFSET_PERCENTAGE = 3;
 const DESCRIPTION_OFFSET_PERCENTAGE = 20;
 
 export const Product = (product) => {
@@ -211,7 +211,7 @@ export const Product = (product) => {
                   <VerticalStack gap="2">
                     <Text>
                       We're writing your product description. This could take up
-                      to 30 seconds.
+                      to one minute.
                     </Text>
                     <ProgressBar progress={progress} color="success" />
                   </VerticalStack>
