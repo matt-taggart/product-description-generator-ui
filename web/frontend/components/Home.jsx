@@ -100,7 +100,7 @@ export function Home() {
     isLoadingProductSearch ||
     isLoadingGenerations;
 
-  const notEnoughCreditsToGenerateAll = creditsRemaining < data?.count;
+  const notEnoughCreditsToGenerateAll = creditsRemaining < products?.length;
 
   const getCreditsRemainingTextColor = (creditsRemaining) => {
     if (creditsRemaining === 0) {
@@ -204,7 +204,13 @@ export function Home() {
                   }
                 />
               )}
-              <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
+              <div
+                style={{
+                  marginLeft: "auto",
+                  alignSelf: "flex-end",
+                  textAlign: "right",
+                }}
+              >
                 {isPageLoading ? (
                   <SkeletonDisplayText size="small" />
                 ) : (
