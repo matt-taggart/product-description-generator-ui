@@ -141,9 +141,7 @@ export const Product = (product) => {
 
   useEffect(() => {
     emitter.on(DISPATCH_GENERATE_EVENT, () => {
-      const shouldGenerate =
-        props.index < props.generationsRemaining || product?.image?.url;
-      if (shouldGenerate) {
+      if (product?.image?.url) {
         generateDescription(product);
       }
     });

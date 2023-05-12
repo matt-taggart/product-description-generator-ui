@@ -100,6 +100,8 @@ export function Home() {
     isLoadingProductSearch ||
     isLoadingGenerations;
 
+  const notEnoughCreditsToGenerateAll = creditsRemaining < data?.count;
+
   const getCreditsRemainingTextColor = (creditsRemaining) => {
     if (creditsRemaining === 0) {
       return "critical";
@@ -193,7 +195,7 @@ export function Home() {
           })()}
           <Box width="100%">
             <HorizontalStack align="space-between">
-              {searchResultsEmpty ? null : (
+              {searchResultsEmpty || notEnoughCreditsToGenerateAll ? null : (
                 <GenerateDescriptionsForAllToolbar
                   productCount={
                     searchedProducts?.length
@@ -250,10 +252,8 @@ export function Home() {
                       {searchedProducts.map((product, index) => (
                         <Product
                           key={product.id}
-                          index={index}
                           {...product}
                           refetch={refetch}
-                          creditsRemaining={creditsRemaining}
                           noCreditsRemaining={creditsRemaining === 0}
                         />
                       ))}
@@ -267,10 +267,8 @@ export function Home() {
                       {products.map((product, index) => (
                         <Product
                           key={product.id}
-                          index={index}
                           {...product}
                           refetch={refetch}
-                          creditsRemaining={creditsRemaining}
                           noCreditsRemaining={creditsRemaining === 0}
                         />
                       ))}
