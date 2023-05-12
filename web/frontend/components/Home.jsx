@@ -112,6 +112,8 @@ export function Home() {
     return null;
   };
 
+  const searchResultsEmpty = value && searchedProducts?.length === 0;
+
   return (
     <Frame>
       <Page>
@@ -140,6 +142,24 @@ export function Home() {
           {(() => {
             if (isPageLoading) {
               return <SkeletonDisplayText size="small" />;
+            }
+
+            if (searchResultsEmpty) {
+              return (
+                <HorizontalStack blockAlign="center" gap="4">
+                  <Text>No search results found</Text>
+                  <Button
+                    size="slim"
+                    onClick={() => {
+                      setSearchedProducts([]);
+                      setValue("");
+                      fetchProducts();
+                    }}
+                  >
+                    Clear Search
+                  </Button>
+                </HorizontalStack>
+              );
             }
 
             if (searchedProducts?.length) {
@@ -173,24 +193,35 @@ export function Home() {
           })()}
           <Box width="100%">
             <HorizontalStack align="space-between">
-              <GenerateDescriptionsForAllToolbar
-                productCount={
-                  searchedProducts?.length
-                    ? searchedProducts.length
-                    : products.length
-                }
-              />
+              {searchResultsEmpty ? null : (
+                <GenerateDescriptionsForAllToolbar
+                  productCount={
+                    searchedProducts?.length
+                      ? searchedProducts.length
+                      : products.length
+                  }
+                />
+              )}
               <div style={{ alignSelf: "flex-end", textAlign: "right" }}>
                 {isPageLoading ? (
                   <SkeletonDisplayText size="small" />
                 ) : (
-                  <Text color={getCreditsRemainingTextColor(creditsRemaining)}>
-                    {creditsRemaining} credits remaining
-                  </Text>
+                  <>
+                    {searchResultsEmpty ? null : (
+                      <Text
+                        color={getCreditsRemainingTextColor(creditsRemaining)}
+                      >
+                        {creditsRemaining} credits remaining
+                      </Text>
+                    )}
+                  </>
                 )}
-                <Button plain onClick={toggleBuyCreditsModal}>
-                  Get more credits
-                </Button>
+                {searchResultsEmpty ? null : (
+                  <Button plain onClick={toggleBuyCreditsModal}>
+                    Get more credits
+                  </Button>
+                )}
+
                 <BuyCreditsModal
                   isBuyCreditsModalOpen={isBuyCreditsModalOpen}
                   toggleBuyCreditsModal={toggleBuyCreditsModal}
