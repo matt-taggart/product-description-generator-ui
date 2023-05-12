@@ -180,7 +180,7 @@ export const Product = (product) => {
             <Box padding="3">
               <Button
                 size="slim"
-                disabled={isGeneratingText}
+                disabled={isGeneratingText || product.noCreditsRemaining}
                 onClick={() => generateDescription(product, value)}
               >
                 Generate description

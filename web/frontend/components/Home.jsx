@@ -252,6 +252,7 @@ export function Home() {
                           key={product.id}
                           {...product}
                           refetch={refetch}
+                          noCreditsRemaining={creditsRemaining === 0}
                         />
                       ))}
                     </>
@@ -266,6 +267,7 @@ export function Home() {
                           key={product.id}
                           {...product}
                           refetch={refetch}
+                          noCreditsRemaining={creditsRemaining === 0}
                         />
                       ))}
                     </>
