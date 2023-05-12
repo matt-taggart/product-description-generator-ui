@@ -12,6 +12,7 @@ import {
   TextField,
   ProgressBar,
   Collapsible,
+  List,
 } from "@shopify/polaris";
 import { useAuthenticatedFetch } from "../hooks";
 import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
@@ -220,24 +221,31 @@ export const Product = (product) => {
             {isAISleeping ? (
               <Box padding="8" maxWidth="85ch">
                 <HorizontalStack
-                  gap="5"
+                  gap="6"
                   align="center"
                   justify="center"
                   wrap={false}
                 >
                   <Box>
-                    <SleepIcon />
+                    <img
+                      src="/assets/mascot.png"
+                      style={{ height: "125px", width: "125px" }}
+                    />
                   </Box>
-                  <VerticalStack align="center" justify="center">
+                  <VerticalStack align="center" justify="center" gap="2">
                     <Text>
-                      Our apologies, but our AI is currently in hibernation mode
-                      due to a period of inactivity. It needs roughly 10 minutes
-                      to reactivate and be ready for your use. We appreciate
-                      your patience during this short wait. Rest assured, no
-                      credits will be deducted from your account during this
-                      brief downtime. Please attempt to use the service again
-                      shortly.
+                      Oops! Our AI is taking a quick power nap. Here's what you
+                      need to know:
                     </Text>
+                    <List type="bullet" spacing="extraTight">
+                      <List.Item>The wake-up call: About 10 minutes.</List.Item>
+                      <List.Item>Your patience: Much appreciated.</List.Item>
+                      <List.Item>
+                        Your credits: Safe and sound, none deducted during
+                        snooze time.
+                      </List.Item>
+                    </List>
+                    <Text>Try again shortly, and our AI will be all ears!</Text>
                   </VerticalStack>
                 </HorizontalStack>
               </Box>
