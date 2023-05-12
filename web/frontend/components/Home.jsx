@@ -247,11 +247,13 @@ export function Home() {
                 if (searchedProducts?.length) {
                   return (
                     <>
-                      {searchedProducts.map((product) => (
+                      {searchedProducts.map((product, index) => (
                         <Product
                           key={product.id}
+                          index={index}
                           {...product}
                           refetch={refetch}
+                          creditsRemaining={creditsRemaining}
                           noCreditsRemaining={creditsRemaining === 0}
                         />
                       ))}
@@ -262,11 +264,13 @@ export function Home() {
                 if (products?.length) {
                   return (
                     <>
-                      {products.map((product) => (
+                      {products.map((product, index) => (
                         <Product
                           key={product.id}
+                          index={index}
                           {...product}
                           refetch={refetch}
+                          creditsRemaining={creditsRemaining}
                           noCreditsRemaining={creditsRemaining === 0}
                         />
                       ))}
