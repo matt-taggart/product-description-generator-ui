@@ -13,10 +13,11 @@ import {
   ProgressBar,
   Collapsible,
 } from "@shopify/polaris";
-import { NoteMinor } from "@shopify/polaris-icons";
-import { EditProductForm } from "./EditProductForm";
 import { useAuthenticatedFetch } from "../hooks";
 import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
+import { NoteMinor } from "@shopify/polaris-icons";
+import { EditProductForm } from "./EditProductForm";
+import { SleepIcon } from "./SleepIcon";
 import "./Product.css";
 
 const INTERVAL = 1000;
@@ -31,6 +32,7 @@ export const Product = (product) => {
   const [value, setValue] = useState("");
   const [progress, setProgress] = useState(0);
   const [generatedText, setGeneratedText] = useState("");
+  const [isAISleeping, setIsAISleeping] = useState(false);
 
   const authenticatedFetch = useAuthenticatedFetch();
   const toggleActive = () => setIsActiveToast(!isActiveToast);
@@ -40,7 +42,8 @@ export const Product = (product) => {
     generatedText ||
     isGeneratingText ||
     isUpdatingDescription ||
-    description;
+    description ||
+    isAISleeping;
 
   useEffect(() => {
     let iv;
@@ -79,6 +82,7 @@ export const Product = (product) => {
   };
 
   const generateDescription = async (product, value) => {
+    setIsAISleeping(false);
     setIsGeneratingText(true);
     const response = await authenticatedFetch("/api/products/generate", {
       method: "POST",
@@ -94,10 +98,17 @@ export const Product = (product) => {
     });
     const data = await response.json();
 
-    setGeneratedText(data.message);
-    setIsGeneratingText(false);
-    setProgress(0);
-    product?.refetch();
+    if (data?.status === "starting") {
+      setIsAISleeping(true);
+      setProgress(0);
+      setIsGeneratingText(false);
+    } else {
+      setIsGeneratingText(false);
+      setGeneratedText(data.message);
+      setIsGeneratingText(false);
+      setProgress(0);
+      product?.refetch();
+    }
   };
 
   const updateDescription = async (product) => {
@@ -205,44 +216,72 @@ export const Product = (product) => {
           transition={{ duration: "500ms", timingFunction: "ease-in-out" }}
           expandOnPrint
         >
-          <Box padding="8" justify="center" maxWidth="65ch">
-            {(() => {
-              if (isGeneratingText) {
-                return (
-                  <VerticalStack gap="2">
+          <Box>
+            {isAISleeping ? (
+              <Box padding="8" maxWidth="85ch">
+                <HorizontalStack
+                  gap="5"
+                  align="center"
+                  justify="center"
+                  wrap={false}
+                >
+                  <Box>
+                    <SleepIcon />
+                  </Box>
+                  <VerticalStack align="center" justify="center">
                     <Text>
-                      We're writing your product description. This could take a
-                      minute or two.{" "}
+                      Our apologies, but our AI is currently in hibernation mode
+                      due to a period of inactivity. It needs roughly 10 minutes
+                      to reactivate and be ready for your use. We appreciate
+                      your patience during this short wait. Rest assured, no
+                      credits will be deducted from your account during this
+                      brief downtime. Please attempt to use the service again
+                      shortly.
                     </Text>
-                    <ProgressBar progress={progress} color="success" />
                   </VerticalStack>
-                );
-              }
+                </HorizontalStack>
+              </Box>
+            ) : (
+              <Box padding="8" justify="center" maxWidth="65ch">
+                {(() => {
+                  if (isGeneratingText) {
+                    return (
+                      <VerticalStack gap="2">
+                        <Text>
+                          We're writing your product description. This could
+                          take a minute or two.{" "}
+                        </Text>
+                        <ProgressBar progress={progress} color="success" />
+                      </VerticalStack>
+                    );
+                  }
 
-              if (isUpdatingDescription) {
-                return (
-                  <VerticalStack gap="2">
-                    <Text>We're updating your product description...</Text>
-                    <ProgressBar progress={progress} color="success" />
-                  </VerticalStack>
-                );
-              }
-              if (isPanelOpen) {
-                return (
-                  <EditProductForm
-                    cancelGeneration={cancelGeneration}
-                    generatedText={generatedText}
-                    setGeneratedText={setGeneratedText}
-                    generateDescription={generateDescription}
-                    updateDescription={updateDescription}
-                    isGeneratingText={isGeneratingText}
-                    product={product}
-                    setDescription={setDescription}
-                    description={description}
-                  />
-                );
-              }
-            })()}
+                  if (isUpdatingDescription) {
+                    return (
+                      <VerticalStack gap="2">
+                        <Text>We're updating your product description...</Text>
+                        <ProgressBar progress={progress} color="success" />
+                      </VerticalStack>
+                    );
+                  }
+                  if (isPanelOpen) {
+                    return (
+                      <EditProductForm
+                        cancelGeneration={cancelGeneration}
+                        generatedText={generatedText}
+                        setGeneratedText={setGeneratedText}
+                        generateDescription={generateDescription}
+                        updateDescription={updateDescription}
+                        isGeneratingText={isGeneratingText}
+                        product={product}
+                        setDescription={setDescription}
+                        description={description}
+                      />
+                    );
+                  }
+                })()}
+              </Box>
+            )}
           </Box>
         </Collapsible>
         <Divider />
