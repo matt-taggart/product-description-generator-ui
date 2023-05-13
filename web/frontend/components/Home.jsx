@@ -100,7 +100,7 @@ export function Home() {
     isLoadingProductSearch ||
     isLoadingGenerations;
 
-  const notEnoughCreditsToGenerateAll = creditsRemaining < products?.length;
+  const noCreditsRemaining = creditsRemaining <= 0;
 
   const getCreditsRemainingTextColor = (creditsRemaining) => {
     if (creditsRemaining === 0) {
@@ -195,7 +195,7 @@ export function Home() {
           })()}
           <Box width="100%">
             <HorizontalStack align="space-between">
-              {searchResultsEmpty || notEnoughCreditsToGenerateAll ? null : (
+              {searchResultsEmpty || noCreditsRemaining ? null : (
                 <GenerateDescriptionsForAllToolbar
                   productCount={
                     searchedProducts?.length
@@ -258,9 +258,11 @@ export function Home() {
                       {searchedProducts.map((product, index) => (
                         <Product
                           key={product.id}
+                          index={index}
+                          creditsRemaining={creditsRemaining}
                           {...product}
                           refetch={refetch}
-                          noCreditsRemaining={creditsRemaining === 0}
+                          noCreditsRemaining={noCreditsRemaining}
                         />
                       ))}
                     </>
@@ -273,9 +275,11 @@ export function Home() {
                       {products.map((product, index) => (
                         <Product
                           key={product.id}
+                          index={index}
+                          creditsRemaining={creditsRemaining}
                           {...product}
                           refetch={refetch}
-                          noCreditsRemaining={creditsRemaining === 0}
+                          noCreditsRemaining={noCreditsRemaining}
                         />
                       ))}
                     </>

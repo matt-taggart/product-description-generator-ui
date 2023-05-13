@@ -18,7 +18,6 @@ import { useAuthenticatedFetch } from "../hooks";
 import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import { NoteMinor } from "@shopify/polaris-icons";
 import { EditProductForm } from "./EditProductForm";
-import { SleepIcon } from "./SleepIcon";
 import "./Product.css";
 
 const INTERVAL = 1000;
@@ -142,6 +141,11 @@ export const Product = (product) => {
 
   useEffect(() => {
     emitter.on(DISPATCH_GENERATE_EVENT, () => {
+      const isOutOfRange = product.index > product.creditsRemaining;
+      if (isOutOfRange) {
+        return;
+      }
+
       if (product?.image?.url) {
         generateDescription(product);
       }
