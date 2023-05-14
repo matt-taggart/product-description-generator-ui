@@ -18,6 +18,7 @@ import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import { NoteMinor } from "@shopify/polaris-icons";
 import { EditProductForm } from "./EditProductForm";
 import { useAuthenticatedFetch } from "../hooks";
+import mascot from "../assets/mascot.png";
 import "./Product.css";
 
 const INTERVAL = 1000;
@@ -232,7 +233,7 @@ export const Product = (product) => {
                 >
                   <Box>
                     <img
-                      src="/assets/mascot.png"
+                      src={mascot}
                       style={{ height: "125px", width: "125px" }}
                     />
                   </Box>
