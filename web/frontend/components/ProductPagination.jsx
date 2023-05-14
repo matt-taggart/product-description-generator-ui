@@ -1,6 +1,6 @@
 import React from "react";
-import { useAuthenticatedFetch } from "../hooks";
 import { Pagination } from "@shopify/polaris";
+import { useAuthenticatedFetch } from "../hooks";
 
 export const ProductPagination = ({
   pageInfo,

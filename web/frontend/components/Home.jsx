@@ -12,12 +12,12 @@ import {
   Box,
 } from "@shopify/polaris";
 
-import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 import { Product } from "./Product";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { ProductPagination } from "./ProductPagination";
 import { BuyCreditsModal } from "./BuyCreditsModal";
 import { GenerateDescriptionsForAllToolbar } from "./GenerateDescriptionsForAllToolbar";
+import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 
 export function Home() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
