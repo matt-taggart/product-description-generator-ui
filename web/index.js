@@ -38,6 +38,16 @@ app.post(
 
 app.use("/api/*", shopify.validateAuthenticatedSession());
 
+const addSessionShopToReqParams = (req, res, next) => {
+  const shop = res.locals?.shopify?.session?.shop;
+  if (shop && !req.query.shop) {
+    req.query.shop = shop;
+  }
+  return next();
+};
+
+app.use("/*", addSessionShopToReqParams);
+
 app.use(express.json());
 
 app.post("/api/products/search", async (_req, res) => {
