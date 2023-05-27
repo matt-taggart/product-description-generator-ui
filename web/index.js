@@ -528,41 +528,29 @@ app.post("/api/products/generate", async (_req, res) => {
 
   try {
     const message = shouldDescribe
-      ? `Please give a product description for the ${shouldDescribe} in the photo.`
-      : "Please give a product description for this photo.";
-
-    // Maybe check timestamp of last generation? This would save money on cost.
-    const modelCheck = await replicate.predictions.create({
-      version:
-        "c1f0352f9da298ac874159e350d6d78139e3805b7e55f5df7c5b79a66ae19528",
-      input: {
-        image: photoUrl,
-        message,
-      },
-    });
-    const isStarting = modelCheck.status === "starting";
-
-    if (isStarting) {
-      res.send({ status: "starting" });
-      return;
-    }
+      ? `Please give a product advertisement for the ${shouldDescribe} in the photo.`
+      : "Please give a product advertisment for this photo.";
 
     const output = await replicate.run(
-      "chen/minigpt-4_vicuna-13b:c1f0352f9da298ac874159e350d6d78139e3805b7e55f5df7c5b79a66ae19528",
+      "joehoover/mplug-owl:51a43c9d00dfd92276b2511b509fcb3ad82e221f6a9e5806c54e69803e291d6b",
       {
         input: {
-          image: photoUrl,
-          message,
+          img: photoUrl,
+          prompt: message,
         },
       }
     );
+
+    const parsedOutput = output.join("");
+    const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on the ${shouldDescribe} in the photo. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+    const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
       messages: [
         {
           role: "user",
-          content: `Context: ${output} \n\n Question: Can you please improve the product description provided in the context? The description should be coherent and make sense. Please focus on the ${shouldDescribe} in the photo. Please do not include a prefix to the description (like "Improved product description:"), as this message will be shown to a user.`,
+          content: shouldDescribe ? shouldDescribeContent : standardContent,
         },
       ],
       temperature: 1,

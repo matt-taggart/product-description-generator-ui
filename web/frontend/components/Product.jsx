@@ -187,7 +187,7 @@ export const Product = (product) => {
               <TextField
                 value={value}
                 onChange={setValue}
-                label="What should the AI describe?"
+                label="What should the AI describe? (Optional)"
                 placeholder="t-shirt, phone, shoes, etc."
                 type="text"
               />
