@@ -33,6 +33,9 @@ export const GenerateDescriptionsForAllToolbar = ({
     emitter.emit(DISPATCH_GENERATE_EVENT, { productIds });
   };
 
+  const creditsToBeUsed =
+    creditsRemaining < productCount ? creditsRemaining : productCount;
+
   return (
     <>
       <HorizontalStack blockAlign="center" gap="4">
@@ -67,7 +70,7 @@ export const GenerateDescriptionsForAllToolbar = ({
         <Modal.Section>
           <Text>
             Are you sure you want to generate descriptions for all products on
-            this page? This will use {creditsRemaining} credits.
+            this page? This will use {creditsToBeUsed} credits.
           </Text>
         </Modal.Section>
       </Modal>
