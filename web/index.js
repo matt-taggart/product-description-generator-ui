@@ -531,15 +531,19 @@ app.post("/api/products/generate", async (_req, res) => {
       ? `Please give a product advertisement for the ${shouldDescribe} in the photo.`
       : "Please give a product advertisment for this photo.";
 
-    const output = await replicate.run(
-      "joehoover/mplug-owl:51a43c9d00dfd92276b2511b509fcb3ad82e221f6a9e5806c54e69803e291d6b",
-      {
-        input: {
-          img: photoUrl,
-          prompt: message,
-        },
-      }
-    );
+    const prediction = await replicate.predictions.create({
+      version:
+        "51a43c9d00dfd92276b2511b509fcb3ad82e221f6a9e5806c54e69803e291d6b",
+      input: {
+        img: photoUrl,
+        prompt: message,
+      },
+    });
+
+    const { output } = await replicate.wait(prediction, {
+      interval: 10000,
+      maxAttempts: 35,
+    });
 
     const parsedOutput = output.join("");
     const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on the ${shouldDescribe} in the photo. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
