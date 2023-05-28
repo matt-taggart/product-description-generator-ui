@@ -67,7 +67,7 @@ export const GenerateDescriptionsForAllToolbar = ({
         <Modal.Section>
           <Text>
             Are you sure you want to generate descriptions for all products on
-            this page? This will use {productCount} credits.
+            this page? This will use {creditsRemaining} credits.
           </Text>
         </Modal.Section>
       </Modal>
