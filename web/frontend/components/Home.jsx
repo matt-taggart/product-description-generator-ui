@@ -197,6 +197,10 @@ export function Home() {
             <HorizontalStack align="space-between">
               {searchResultsEmpty || noCreditsRemaining ? null : (
                 <GenerateDescriptionsForAllToolbar
+                  creditsRemaining={creditsRemaining}
+                  products={
+                    searchedProducts?.length ? searchedProducts : products
+                  }
                   productCount={
                     searchedProducts?.length
                       ? searchedProducts.length
@@ -263,6 +267,7 @@ export function Home() {
                           {...product}
                           refetch={refetch}
                           noCreditsRemaining={noCreditsRemaining}
+                          productList={searchedProducts}
                         />
                       ))}
                     </>
@@ -280,6 +285,7 @@ export function Home() {
                           {...product}
                           refetch={refetch}
                           noCreditsRemaining={noCreditsRemaining}
+                          productList={products}
                         />
                       ))}
                     </>

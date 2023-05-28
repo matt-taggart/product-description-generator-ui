@@ -8,14 +8,29 @@ import {
 } from "@shopify/polaris";
 import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 
-export const GenerateDescriptionsForAllToolbar = ({ productCount }) => {
+export const GenerateDescriptionsForAllToolbar = ({
+  productCount,
+  products,
+  creditsRemaining,
+}) => {
   const [checked, setChecked] = useState(false);
   const handleChecked = (newChecked) => setChecked(newChecked);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
 
   const dispatchAllDescriptions = () => {
-    emitter.emit(DISPATCH_GENERATE_EVENT);
+    const productIds = new Map();
+
+    let creditCount = creditsRemaining;
+
+    products.forEach((product) => {
+      if (creditCount > 0 && product?.image?.url) {
+        productIds.set(product.id, product.id);
+        creditCount -= 1;
+      }
+    });
+
+    emitter.emit(DISPATCH_GENERATE_EVENT, { productIds });
   };
 
   return (
