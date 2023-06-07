@@ -12,6 +12,7 @@ import {
   TextField,
   ProgressBar,
   Collapsible,
+  Select,
 } from "@shopify/polaris";
 import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import { NoteMinor } from "@shopify/polaris-icons";
@@ -32,8 +33,15 @@ export const Product = (props) => {
   const [value, setValue] = useState("");
   const [progress, setProgress] = useState(0);
   const [generatedText, setGeneratedText] = useState("");
+  const [selected, setSelected] = useState("bold and confident");
   const [refreshNotificationMessage, setRefreshNotificationMessage] =
     useState("");
+
+  const options = [
+    { label: "Bold and Confident", value: "bold and confident" },
+    { label: "Friendly and Playful", value: "friendly and playful" },
+    { label: "Warm and Welcoming", value: "warm and welcoming" },
+  ];
 
   const authenticatedFetch = useAuthenticatedFetch();
   const toggleActive = () => setIsActiveToast(!isActiveToast);
@@ -82,7 +90,7 @@ export const Product = (props) => {
   useEffect(() => {
     if (progress > 100) {
       setRefreshNotificationMessage(
-        "This is taking longer than expected. Try refreshing the page to see if the issue persists."
+        "Our AI model is warming up and results could be taking longer than expected. Try refreshing the page to see if the issue persists. Credits for this product won't be charged on refresh."
       );
     }
   }, [progress]);
@@ -123,6 +131,7 @@ export const Product = (props) => {
         productName: product?.title,
         photoUrl: product?.image.url,
         keywords: value,
+        tone: selected,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -219,8 +228,8 @@ export const Product = (props) => {
     <Box>
       {toastMarkup}
       <VerticalStack>
-        <HorizontalStack blockAlign="center" gap="8">
-          <HorizontalStack blockAlign="center" gap="6">
+        <HorizontalStack blockAlign="center" gap="4">
+          <HorizontalStack blockAlign="center" gap="4">
             <Box padding="3">
               <Thumbnail size="large" source={props?.image?.url || NoteMinor} />
             </Box>
@@ -248,6 +257,15 @@ export const Product = (props) => {
                 type="text"
               />
             </div>
+          </Box>
+
+          <Box padding="3">
+            <Select
+              label="Voice & Tone"
+              options={options}
+              onChange={setSelected}
+              value={selected}
+            />
           </Box>
           {props?.image?.url ? (
             <Box padding="3">

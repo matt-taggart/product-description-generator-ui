@@ -534,6 +534,7 @@ app.get("/api/products/generate/:id", async (_req, res) => {
       .eq("id", id);
     const [generation] = data;
     const keywords = generation.keywords;
+    const tone = generation.tone;
 
     const { output } = await replicate.wait(generation.prediction, {
       interval: 10000,
@@ -541,8 +542,8 @@ app.get("/api/products/generate/:id", async (_req, res) => {
     });
 
     const parsedOutput = output.join("");
-    const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on these attributes in the photo: ${keywords}. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
-    const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+    const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on these attributes in the photo: ${keywords}. The voice and tone of the description should be ${tone}. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+    const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. The voice and tone of the description should be ${tone}. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
 
     const completion = await openai.createChatCompletion({
       model: "gpt-3.5-turbo",
@@ -570,7 +571,7 @@ app.post("/api/products/generate", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-  const { id: productId, photoUrl, keywords } = _req.body;
+  const { id: productId, photoUrl, keywords, tone } = _req.body;
 
   try {
     // get shop id
@@ -589,8 +590,8 @@ app.post("/api/products/generate", async (_req, res) => {
 
     const shopId = response.body.data.shop.id;
     const message = keywords
-      ? `Please give a product advertisement in the photo. Please focus on these attributes: ${keywords}.`
-      : "Please give a product advertisment for this photo.";
+      ? `Please give a product advertisement in the photo. Please focus on these attributes: ${keywords}. The voice and tone should be ${tone}.`
+      : `Please give a product advertisment for this photo. The voice and tone should be ${tone}.`;
 
     const prediction = await replicate.predictions.create({
       version:
@@ -607,6 +608,7 @@ app.post("/api/products/generate", async (_req, res) => {
       id,
       prediction,
       keywords,
+      tone,
       shop_id: shopId,
       product_id: productId,
       status: StatusTypes.STARTING,
