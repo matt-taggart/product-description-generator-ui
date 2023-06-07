@@ -134,6 +134,25 @@ export const Product = (props) => {
     refetchProducts();
   };
 
+  const getGenerationResponse = async (data) => {
+    setIsGeneratingText(true);
+
+    const generationResponse = await authenticatedFetch(
+      `/api/products/generate/${data.id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const generationData = await generationResponse.json();
+    setGeneratedText(generationData.message);
+    setIsGeneratingText(false);
+    setProgress(0);
+    refetchProducts();
+  };
+
   const updateDescription = async (product) => {
     setIsUpdatingDescription(true);
     await cancelGeneration(product);
@@ -173,6 +192,12 @@ export const Product = (props) => {
     return () => {
       emitter.off(DISPATCH_GENERATE_EVENT);
     };
+  }, []);
+
+  useEffect(() => {
+    if (props?.generation?.status === StatusTypes.STARTING) {
+      getGenerationResponse(props?.generation);
+    }
   }, []);
 
   const isDisabled = isGeneratingText || noCreditsRemaining;
