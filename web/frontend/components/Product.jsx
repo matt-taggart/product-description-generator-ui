@@ -17,6 +17,7 @@ import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import { NoteMinor } from "@shopify/polaris-icons";
 import { EditProductForm } from "./EditProductForm";
 import { useAuthenticatedFetch } from "../hooks";
+import { StatusTypes } from "../../status.constants";
 import "./Product.css";
 
 const INTERVAL = 1000;
@@ -34,6 +35,13 @@ export const Product = (props) => {
 
   const authenticatedFetch = useAuthenticatedFetch();
   const toggleActive = () => setIsActiveToast(!isActiveToast);
+  const {
+    noCreditsRemaining,
+    decrementCredits,
+    refetchProducts,
+    id,
+    setProducts,
+  } = props;
 
   const isPanelOpen =
     progress > 0 ||
@@ -46,7 +54,7 @@ export const Product = (props) => {
     let iv;
     if (isGeneratingText) {
       iv = setInterval(() => {
-        const offset = progress > 45 ? 1 : GENERATION_OFFSET_PERCENTAGE;
+        const offset = progress > 45 ? 0.5 : GENERATION_OFFSET_PERCENTAGE;
         setProgress(progress + offset);
       }, INTERVAL);
     }
@@ -80,13 +88,29 @@ export const Product = (props) => {
 
   const generateDescription = async (product, value) => {
     setIsGeneratingText(true);
+    decrementCredits();
+
+    setProducts((prevState) => {
+      return prevState.map((product) => {
+        if (product.id === id) {
+          return {
+            ...product,
+            generatedText: {
+              status: StatusTypes.STARTING,
+            },
+          };
+        }
+        return product;
+      });
+    });
+
     const response = await authenticatedFetch("/api/products/generate", {
       method: "POST",
       body: JSON.stringify({
         id: product?.id,
         productName: product?.title,
         photoUrl: product?.image.url,
-        shouldDescribe: value,
+        keywords: value,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -94,11 +118,23 @@ export const Product = (props) => {
     });
     const data = await response.json();
 
-    setIsGeneratingText(false);
-    setGeneratedText(data.message);
+    props?.refetch();
+
+    const generationResponse = await authenticatedFetch(
+      `/api/products/generate/${data.id}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    const generationData = await generationResponse.json();
+    setGeneratedText(generationData.message);
     setIsGeneratingText(false);
     setProgress(0);
     props?.refetch();
+    refetchProducts();
   };
 
   const updateDescription = async (product) => {
@@ -132,7 +168,11 @@ export const Product = (props) => {
   useEffect(() => {
     emitter.on(DISPATCH_GENERATE_EVENT, (ctx) => {
       const canGenerate = ctx.productIds.has(props?.id);
-      if (canGenerate && props?.image?.url) {
+      if (
+        canGenerate &&
+        props?.image?.url &&
+        props?.generation?.status !== StatusTypes.STARTING
+      ) {
         generateDescription(props);
       }
     });
@@ -141,6 +181,8 @@ export const Product = (props) => {
       emitter.off(DISPATCH_GENERATE_EVENT);
     };
   }, []);
+
+  const isDisabled = isGeneratingText || noCreditsRemaining;
   return (
     <Box>
       {toastMarkup}
@@ -169,8 +211,8 @@ export const Product = (props) => {
               <TextField
                 value={value}
                 onChange={setValue}
-                label="What should the AI describe? (Optional)"
-                placeholder="t-shirt, phone, shoes, etc."
+                label="Features & Keywords (Optional)"
+                placeholder="pink, silk, dress, etc."
                 type="text"
               />
             </div>
@@ -179,7 +221,7 @@ export const Product = (props) => {
             <Box padding="3">
               <Button
                 size="slim"
-                disabled={isGeneratingText || props.noCreditsRemaining}
+                disabled={isDisabled}
                 onClick={() => generateDescription(props, value)}
               >
                 Generate description
@@ -239,6 +281,7 @@ export const Product = (props) => {
                       product={props}
                       setDescription={setDescription}
                       description={description}
+                      isDisabled={isDisabled}
                     />
                   );
                 }

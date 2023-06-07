@@ -35,6 +35,7 @@ export const GenerateDescriptionsForAllToolbar = ({
 
   const creditsToBeUsed =
     creditsRemaining < productCount ? creditsRemaining : productCount;
+  const isDisabled = creditsRemaining <= 0;
 
   return (
     <>
@@ -44,7 +45,11 @@ export const GenerateDescriptionsForAllToolbar = ({
           checked={checked}
           onChange={handleChecked}
         />
-        <Button size="slim" disabled={!checked} onClick={toggleModal}>
+        <Button
+          size="slim"
+          disabled={isDisabled || !checked}
+          onClick={toggleModal}
+        >
           Submit
         </Button>
       </HorizontalStack>

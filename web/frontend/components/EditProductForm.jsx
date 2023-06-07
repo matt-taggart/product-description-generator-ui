@@ -20,6 +20,7 @@ export function EditProductForm({
   description,
   setDescription,
   cancelGeneration,
+  isDisabled,
 }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const toggleModal = () => setIsModalOpen(!isModalOpen);
@@ -44,6 +45,7 @@ export function EditProductForm({
               Submit
             </Button>
             <Button
+              disabled={isDisabled}
               isLoading={isGeneratingText}
               icon={RedoMajor}
               onClick={() => generateDescription(product)}

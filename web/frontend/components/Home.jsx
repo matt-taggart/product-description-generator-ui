@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   Text,
   TextField,
@@ -45,12 +45,38 @@ export function Home() {
     reactQueryOptions: {},
   });
 
-  const creditsRemaining = generationData?.creditsRemaining;
+  const generatedCreditsRemaining = generationData?.creditsRemaining;
+
+  const creditsRef = useRef();
+
+  useEffect(() => {
+    if (!creditsRef.current) {
+      creditsRef.current = generatedCreditsRemaining;
+    }
+  }, [generatedCreditsRemaining]);
+
+  function decrementCredits() {
+    creditsRef.current = creditsRef.current - 1;
+  }
+
+  const creditsRemaining = creditsRef.current;
 
   const authenticatedFetch = useAuthenticatedFetch();
 
   const fetchProducts = useCallback(async () => {
     setIsLoadingProducts(true);
+    const response = await authenticatedFetch(`/api/products`, {
+      method: "GET",
+    });
+    const productResponse = await response.json();
+
+    setProductState(productResponse);
+    setSearchedProductState([]);
+
+    setIsLoadingProducts(false);
+  }, []);
+
+  const refetchProducts = useCallback(async () => {
     const response = await authenticatedFetch(`/api/products`, {
       method: "GET",
     });
@@ -268,6 +294,9 @@ export function Home() {
                           refetch={refetch}
                           noCreditsRemaining={noCreditsRemaining}
                           productList={searchedProducts}
+                          decrementCredits={decrementCredits}
+                          refetchProducts={refetchProducts}
+                          setProductState={setProductState}
                         />
                       ))}
                     </>
@@ -286,6 +315,9 @@ export function Home() {
                           refetch={refetch}
                           noCreditsRemaining={noCreditsRemaining}
                           productList={products}
+                          decrementCredits={decrementCredits}
+                          refetchProducts={refetchProducts}
+                          setProducts={setProducts}
                         />
                       ))}
                     </>

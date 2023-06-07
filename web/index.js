@@ -11,6 +11,7 @@ import { supabase } from "./supabaseClient.js";
 import shopify from "./shopify.js";
 import productCreator from "./product-creator.js";
 import GDPRWebhookHandlers from "./gdpr.js";
+import { StatusTypes } from "./status.constants.js";
 
 const PORT = parseInt(process.env.BACKEND_PORT || process.env.PORT, 10);
 
@@ -111,7 +112,7 @@ app.post("/api/products/search", async (_req, res) => {
       };
     })
     .map((product) => {
-      const productGenerationData = generationData.find(
+      const productGenerationData = generationData?.find(
         (generation) => generation.product_id === product.id
       );
 
@@ -520,46 +521,53 @@ const configuration = new Configuration({
 });
 const openai = new OpenAIApi(configuration);
 
+app.get("/api/products/generate/:id", async (_req, res) => {
+  const client = new shopify.api.clients.Graphql({
+    session: res.locals.shopify.session,
+  });
+
+  const { id } = _req.params;
+  const { data } = await supabase.from("generations").select("*").eq("id", id);
+  const [generation] = data;
+  const keywords = generation.keywords;
+
+  const { output } = await replicate.wait(generation.prediction, {
+    interval: 10000,
+    maxAttempts: 35,
+  });
+
+  const parsedOutput = output.join("");
+  const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on these attributes in the photo: ${keywords}. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+  const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+
+  const completion = await openai.createChatCompletion({
+    model: "gpt-3.5-turbo",
+    messages: [
+      {
+        role: "user",
+        content: keywords ? shouldDescribeContent : standardContent,
+      },
+    ],
+    temperature: 1,
+  });
+
+  const generatedText = completion.data.choices[0].message.content;
+
+  await supabase
+    .from("generations")
+    .update({ generated_text: generatedText, status: StatusTypes.SUCCEEDED })
+    .eq("id", id);
+
+  res.send({ message: generatedText });
+});
+
 app.post("/api/products/generate", async (_req, res) => {
   const client = new shopify.api.clients.Graphql({
     session: res.locals.shopify.session,
   });
-  const { id: productId, photoUrl, shouldDescribe } = _req.body;
+  const { id: productId, photoUrl, keywords } = _req.body;
 
   try {
-    const message = shouldDescribe
-      ? `Please give a product advertisement for the ${shouldDescribe} in the photo.`
-      : "Please give a product advertisment for this photo.";
-
-    const prediction = await replicate.predictions.create({
-      version:
-        "51a43c9d00dfd92276b2511b509fcb3ad82e221f6a9e5806c54e69803e291d6b",
-      input: {
-        img: photoUrl,
-        prompt: message,
-      },
-    });
-
-    const { output } = await replicate.wait(prediction, {
-      interval: 10000,
-      maxAttempts: 35,
-    });
-
-    const parsedOutput = output.join("");
-    const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on the ${shouldDescribe} in the photo. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
-    const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
-
-    const completion = await openai.createChatCompletion({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "user",
-          content: shouldDescribe ? shouldDescribeContent : standardContent,
-        },
-      ],
-      temperature: 1,
-    });
-
     // get shop id
     const shopIdQuery = `
       {
@@ -573,15 +581,30 @@ app.post("/api/products/generate", async (_req, res) => {
         query: shopIdQuery,
       },
     });
-    const shopId = response.body.data.shop.id;
 
-    const generatedText = completion.data.choices[0].message.content;
+    const shopId = response.body.data.shop.id;
+    const message = keywords
+      ? `Please give a product advertisement in the photo. Please focus on these attributes: ${keywords}.`
+      : "Please give a product advertisment for this photo.";
+
+    const prediction = await replicate.predictions.create({
+      version:
+        "51a43c9d00dfd92276b2511b509fcb3ad82e221f6a9e5806c54e69803e291d6b",
+      input: {
+        img: photoUrl,
+        prompt: message,
+      },
+    });
+
+    const id = uuidv4();
 
     await supabase.from("generations").insert({
-      id: uuidv4(),
+      id,
+      prediction,
+      keywords,
       shop_id: shopId,
       product_id: productId,
-      generated_text: generatedText,
+      status: StatusTypes.STARTING,
     });
 
     // update generation count and credits remaining
@@ -589,9 +612,8 @@ app.post("/api/products/generate", async (_req, res) => {
       shop_id: shopId,
     });
 
-    res.send({ message: generatedText });
+    res.send({ id });
   } catch (error) {
-    console.log("%cerror", "color:cyan; ", error);
     res.status(400).send({ message: "Something went wrong" });
   }
 });
