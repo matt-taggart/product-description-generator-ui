@@ -95,7 +95,7 @@ export const Product = (props) => {
         if (product.id === id) {
           return {
             ...product,
-            generatedText: {
+            generation: {
               status: StatusTypes.STARTING,
             },
           };
@@ -118,8 +118,6 @@ export const Product = (props) => {
     });
     const data = await response.json();
 
-    props?.refetch();
-
     const generationResponse = await authenticatedFetch(
       `/api/products/generate/${data.id}`,
       {
@@ -133,7 +131,6 @@ export const Product = (props) => {
     setGeneratedText(generationData.message);
     setIsGeneratingText(false);
     setProgress(0);
-    props?.refetch();
     refetchProducts();
   };
 
@@ -168,11 +165,7 @@ export const Product = (props) => {
   useEffect(() => {
     emitter.on(DISPATCH_GENERATE_EVENT, (ctx) => {
       const canGenerate = ctx.productIds.has(props?.id);
-      if (
-        canGenerate &&
-        props?.image?.url &&
-        props?.generation?.status !== StatusTypes.STARTING
-      ) {
+      if (canGenerate) {
         generateDescription(props);
       }
     });

@@ -36,14 +36,12 @@ export function Home() {
     reactQueryOptions: {},
   });
 
-  const {
-    data: generationData,
-    isLoading: isLoadingGenerations,
-    refetch,
-  } = useAppQuery({
-    url: "/api/generations",
-    reactQueryOptions: {},
-  });
+  const { data: generationData, isLoading: isLoadingGenerations } = useAppQuery(
+    {
+      url: "/api/generations",
+      reactQueryOptions: {},
+    }
+  );
 
   const generatedCreditsRemaining = generationData?.creditsRemaining;
 
@@ -84,6 +82,22 @@ export function Home() {
 
     setProductState(productResponse);
     setSearchedProductState([]);
+  }, []);
+
+  const refetchSearchedProducts = useCallback(async () => {
+    const response = await authenticatedFetch("/api/products/search", {
+      method: "POST",
+      body: JSON.stringify({
+        searchText: value,
+      }),
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
+    const searchedProducts = await response.json();
+
+    setSearchedProductState(searchedProducts);
+    setProducts([]);
   }, []);
 
   useEffect(() => {
@@ -291,12 +305,10 @@ export function Home() {
                           index={index}
                           creditsRemaining={creditsRemaining}
                           {...product}
-                          refetch={refetch}
                           noCreditsRemaining={noCreditsRemaining}
-                          productList={searchedProducts}
                           decrementCredits={decrementCredits}
-                          refetchProducts={refetchProducts}
-                          setProductState={setProductState}
+                          refetchProducts={refetchSearchedProducts}
+                          setProducts={setSearchedProducts}
                         />
                       ))}
                     </>
@@ -312,9 +324,7 @@ export function Home() {
                           index={index}
                           creditsRemaining={creditsRemaining}
                           {...product}
-                          refetch={refetch}
                           noCreditsRemaining={noCreditsRemaining}
-                          productList={products}
                           decrementCredits={decrementCredits}
                           refetchProducts={refetchProducts}
                           setProducts={setProducts}

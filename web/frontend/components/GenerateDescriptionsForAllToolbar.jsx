@@ -7,6 +7,7 @@ import {
   Modal,
 } from "@shopify/polaris";
 import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
+import { StatusTypes } from "../../status.constants";
 
 export const GenerateDescriptionsForAllToolbar = ({
   productCount,
@@ -24,7 +25,11 @@ export const GenerateDescriptionsForAllToolbar = ({
     let creditCount = creditsRemaining;
 
     products.forEach((product) => {
-      if (creditCount > 0 && product?.image?.url) {
+      if (
+        creditCount > 0 &&
+        product?.image?.url &&
+        product?.generation?.status !== StatusTypes.STARTING
+      ) {
         productIds.set(product.id, product.id);
         creditCount -= 1;
       }
@@ -75,7 +80,7 @@ export const GenerateDescriptionsForAllToolbar = ({
         <Modal.Section>
           <Text>
             Are you sure you want to generate descriptions for all products on
-            this page? This will use {creditsToBeUsed} credits.
+            this page? This will use up to {creditsToBeUsed} credits.
           </Text>
         </Modal.Section>
       </Modal>

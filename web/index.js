@@ -526,39 +526,44 @@ app.get("/api/products/generate/:id", async (_req, res) => {
     session: res.locals.shopify.session,
   });
 
-  const { id } = _req.params;
-  const { data } = await supabase.from("generations").select("*").eq("id", id);
-  const [generation] = data;
-  const keywords = generation.keywords;
+  try {
+    const { id } = _req.params;
+    const { data } = await supabase
+      .from("generations")
+      .select("*")
+      .eq("id", id);
+    const [generation] = data;
+    const keywords = generation.keywords;
 
-  const { output } = await replicate.wait(generation.prediction, {
-    interval: 10000,
-    maxAttempts: 35,
-  });
+    const { output } = await replicate.wait(generation.prediction, {
+      interval: 10000,
+      maxAttempts: 35,
+    });
 
-  const parsedOutput = output.join("");
-  const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on these attributes in the photo: ${keywords}. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
-  const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+    const parsedOutput = output.join("");
+    const shouldDescribeContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please focus on these attributes in the photo: ${keywords}. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
+    const standardContent = `Context: ${parsedOutput} \n\n Question: Can you please improve the product advertisement provided in the context? The description should be coherent and make sense. Please do not include a prefix to the description (like "Improved product advertisement:"), as this message will be shown to a user.`;
 
-  const completion = await openai.createChatCompletion({
-    model: "gpt-3.5-turbo",
-    messages: [
-      {
-        role: "user",
-        content: keywords ? shouldDescribeContent : standardContent,
-      },
-    ],
-    temperature: 1,
-  });
+    const completion = await openai.createChatCompletion({
+      model: "gpt-3.5-turbo",
+      messages: [
+        {
+          role: "user",
+          content: keywords ? shouldDescribeContent : standardContent,
+        },
+      ],
+      temperature: 1,
+    });
 
-  const generatedText = completion.data.choices[0].message.content;
+    const generatedText = completion.data.choices[0].message.content;
 
-  await supabase
-    .from("generations")
-    .update({ generated_text: generatedText, status: StatusTypes.SUCCEEDED })
-    .eq("id", id);
+    await supabase
+      .from("generations")
+      .update({ generated_text: generatedText, status: StatusTypes.SUCCEEDED })
+      .eq("id", id);
 
-  res.send({ message: generatedText });
+    res.send({ message: generatedText });
+  } catch (error) {}
 });
 
 app.post("/api/products/generate", async (_req, res) => {
