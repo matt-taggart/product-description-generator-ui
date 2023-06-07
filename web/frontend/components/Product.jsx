@@ -32,6 +32,8 @@ export const Product = (props) => {
   const [value, setValue] = useState("");
   const [progress, setProgress] = useState(0);
   const [generatedText, setGeneratedText] = useState("");
+  const [refreshNotificationMessage, setRefreshNotificationMessage] =
+    useState("");
 
   const authenticatedFetch = useAuthenticatedFetch();
   const toggleActive = () => setIsActiveToast(!isActiveToast);
@@ -77,6 +79,14 @@ export const Product = (props) => {
     };
   }, [isUpdatingDescription, progress]);
 
+  useEffect(() => {
+    if (progress > 100) {
+      setRefreshNotificationMessage(
+        "This is taking longer than expected. Try refreshing the page to see if the issue persists."
+      );
+    }
+  }, [progress]);
+
   const cancelGeneration = async (product) => {
     await authenticatedFetch(
       `/api/products/generate/${encodeURIComponent(product.id)}`,
@@ -84,6 +94,8 @@ export const Product = (props) => {
         method: "DELETE",
       }
     );
+
+    setRefreshNotificationMessage("");
   };
 
   const generateDescription = async (product, value) => {
@@ -132,6 +144,7 @@ export const Product = (props) => {
     setIsGeneratingText(false);
     setProgress(0);
     refetchProducts();
+    setRefreshNotificationMessage("");
   };
 
   const getGenerationResponse = async (data) => {
@@ -151,6 +164,7 @@ export const Product = (props) => {
     setIsGeneratingText(false);
     setProgress(0);
     refetchProducts();
+    setRefreshNotificationMessage("");
   };
 
   const updateDescription = async (product) => {
@@ -270,10 +284,14 @@ export const Product = (props) => {
                 if (isGeneratingText) {
                   return (
                     <VerticalStack gap="2">
-                      <Text>
-                        We're writing your product description. This could take
-                        a minute or two.{" "}
-                      </Text>
+                      {refreshNotificationMessage ? (
+                        <>{refreshNotificationMessage}</>
+                      ) : (
+                        <Text>
+                          We're writing your product description. This could
+                          take a minute or two.{" "}
+                        </Text>
+                      )}
                       <ProgressBar progress={progress} color="success" />
                     </VerticalStack>
                   );
