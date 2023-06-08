@@ -90,7 +90,7 @@ export const Product = (props) => {
   useEffect(() => {
     if (progress > 100) {
       setRefreshNotificationMessage(
-        "Our AI model is warming up and results could be taking longer than expected. Try refreshing the page to see if the issue persists. Credits for this product won't be charged on refresh."
+        "Our AI model is currently initializing, which might lead to longer response times than anticipated. If you experience delays, please refresh the page to check if the situation improves. Rest assured, no credits will be deducted for this product during a refresh."
       );
     }
   }, [progress]);
