@@ -70,7 +70,6 @@ export function Home() {
 
     setProductState(productResponse);
     setSearchedProductState([]);
-
     setIsLoadingProducts(false);
   }, []);
 
@@ -98,7 +97,7 @@ export function Home() {
 
     setSearchedProductState(searchedProducts);
     setProducts([]);
-  }, []);
+  }, [value]);
 
   useEffect(() => {
     fetchProducts();
