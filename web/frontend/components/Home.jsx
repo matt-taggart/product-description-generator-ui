@@ -12,12 +12,13 @@ import {
   Box,
 } from "@shopify/polaris";
 
+import { useAppQuery, useAuthenticatedFetch } from "../hooks";
 import { Product } from "./Product";
 import { ProductSkeleton } from "./ProductSkeleton";
 import { ProductPagination } from "./ProductPagination";
 import { BuyCreditsModal } from "./BuyCreditsModal";
 import { GenerateDescriptionsForAllToolbar } from "./GenerateDescriptionsForAllToolbar";
-import { useAppQuery, useAuthenticatedFetch } from "../hooks";
+import { ScribeLogo } from "./ScribeLogo";
 
 export function Home() {
   const [isLoadingProductSearch, setIsLoadingProductSearch] = useState(false);
@@ -159,9 +160,9 @@ export function Home() {
     <Frame>
       <Page>
         <VerticalStack gap="4">
-          <Text variant="headingXl" as="h1">
-            Product Description Generator
-          </Text>
+          <div style={{ width: "200px" }}>
+            <ScribeLogo />
+          </div>
           <form
             onSubmit={(e) => {
               e.preventDefault();
@@ -172,7 +173,7 @@ export function Home() {
               value={value}
               onChange={handleChange}
               connectedRight={
-                <Button type="submit" primary onClick={onSubmit}>
+                <Button type="submit" disabled={!value} onClick={onSubmit}>
                   Search
                 </Button>
               }

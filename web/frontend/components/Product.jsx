@@ -14,8 +14,8 @@ import {
   Collapsible,
   Select,
 } from "@shopify/polaris";
-import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import { NoteMinor } from "@shopify/polaris-icons";
+import { DISPATCH_GENERATE_EVENT, emitter } from "./event-emitter";
 import { EditProductForm } from "./EditProductForm";
 import { useAuthenticatedFetch } from "../hooks";
 import { StatusTypes } from "../../status.constants";
