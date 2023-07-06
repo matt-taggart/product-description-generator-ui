@@ -31,6 +31,8 @@ export function Home() {
   const [searchedProducts, setSearchedProducts] = useState([]);
   const [pageInfo, setPageInfo] = useState({});
   const [searchedPageInfo, setSearchedPageInfo] = useState({});
+  const [, updateState] = useState();
+  const forceUpdate = React.useCallback(() => updateState({}), []);
 
   const { data, isLoading: isLoadingCount } = useAppQuery({
     url: "/api/products/count",
@@ -51,8 +53,9 @@ export function Home() {
   useEffect(() => {
     if (!creditsRef.current) {
       creditsRef.current = generatedCreditsRemaining;
+      forceUpdate();
     }
-  }, [generatedCreditsRemaining]);
+  }, [generatedCreditsRemaining, forceUpdate]);
 
   function decrementCredits() {
     creditsRef.current = creditsRef.current - 1;

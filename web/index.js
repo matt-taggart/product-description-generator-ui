@@ -280,6 +280,7 @@ app.get("/api/products", async (_req, res) => {
 
       return product;
     });
+
   res.send({
     pageInfo,
     products,
@@ -305,7 +306,29 @@ app.get("/api/generations", async (_req, res) => {
   const id = response.body.data.shop.id;
   const { data } = await supabase.from("shops").select("*").eq("shop_id", id);
 
-  const creditsRemaining = data[0]?.credits_remaining || 0;
+  const { count } = await supabase
+    .from("shops")
+    .select("name", { count: "exact" })
+    .eq("shop_id", id);
+
+  if (count === 0) {
+    const shop = client.client.domain;
+    const FREE_CREDITS = 5;
+    await supabase.from("shops").insert({
+      id: uuidv4(),
+      shop_id: id,
+      name: shop,
+      generation_count: 0,
+      credits_remaining: FREE_CREDITS,
+    });
+
+    const { data } = await supabase.from("shops").select("*").eq("shop_id", id);
+
+    res.status(200).send({ creditsRemaining: data[0]?.credits_remaining });
+    return;
+  }
+
+  const creditsRemaining = data[0]?.credits_remaining;
 
   res.status(200).send({ creditsRemaining });
 });
